@@ -1,0 +1,91 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<!-- HERO BANNER WITH TORN PAPER BOTTOM & SEARCH BAR -->
+<div class="about-hero-wrapper" style="background: linear-gradient(rgba(30, 96, 213, 0.88), rgba(26, 84, 190, 0.92)), url('{{ url_for('static', filename='uploads/' + hero_image) if hero_image and not hero_image.startswith('http') else hero_image }}') center/cover no-repeat;">
+  <h1 class="about-hero-title">CLUBS</h1>
+
+  <!-- Search Bar -->
+  <div class="gallery-search-box">
+    <select class="search-dropdown">
+      <option value="ALL">ALL &#9662;</option>
+    </select>
+    <input type="text" id="clubsSearchInput" class="search-input" placeholder="Search Keyword">
+    <button type="button" class="search-btn" onclick="filterClubs()">Search</button>
+  </div>
+
+  <div class="torn-paper-edge"></div>
+</div>
+
+<div class="events-gallery-wrapper">
+  <div class="row g-4" id="clubsContainer">
+
+    {% if clubs %}
+      {% for club in clubs %}
+      <div class="col-lg-3 col-md-4 col-sm-6 club-item-col" data-title="{{ club.name }}">
+        <div class="event-poster-card d-flex flex-column justify-content-between h-100">
+          <div>
+            <div class="event-poster-img-wrap">
+              {% if club.image_url %}
+              <img src="{{ url_for('static', filename='uploads/' + club.image_url) }}" 
+                   alt="{{ club.name }}"
+                   onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80';">
+              {% else %}
+              <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80" alt="{{ club.name }}">
+              {% endif %}
+            </div>
+            <div class="event-poster-body">
+              <div class="event-poster-title">{{ club.name }}</div>
+              <p class="event-poster-date"><i class="fa fa-users me-1 text-primary"></i> Student Organization</p>
+              <p class="small text-muted mt-2 mb-0" style="white-space: pre-line;">{{ club.details }}</p>
+            </div>
+          </div>
+
+          <!-- DYNAMIC CLUB LINK -->
+          {% if club.link_url %}
+          <div class="px-3 pb-3 pt-2">
+            <a href="{{ club.link_url }}" target="_blank" class="btn btn-sm btn-outline-primary w-100 fw-bold">
+              <i class="fa fa-external-link-alt me-1"></i> Visit Club Page
+            </a>
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12 text-center py-5 bg-white rounded shadow-sm">
+        <i class="fa fa-users fa-3x text-muted mb-3"></i>
+        <h5 class="text-dark fw-bold">No registered clubs yet.</h5>
+        <p class="text-muted mb-0">Clubs will be displayed here once published by the administrator.</p>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Floating Back-to-Top Blue Button -->
+<a href="#" class="btn-floating-top" title="Back to Top">
+  <i class="fa fa-angle-double-up"></i>
+</a>
+
+<!-- Live Client-side Filter Script -->
+<script>
+  function filterClubs() {
+    const term = document.getElementById('clubsSearchInput').value.toLowerCase().trim();
+    const items = document.querySelectorAll('.club-item-col');
+
+    items.forEach(item => {
+      const title = item.getAttribute('data-title').toLowerCase();
+      if (title.includes(term)) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  document.getElementById('clubsSearchInput').addEventListener('keyup', filterClubs);
+</script>
+
+{% endblock %}

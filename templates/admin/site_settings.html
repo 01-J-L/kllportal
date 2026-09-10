@@ -1,0 +1,152 @@
+  {% extends 'admin_layout.html' %}
+  {% block content %}
+
+
+
+  <!-- MAIN WHITE CARD -->
+  <div class="admin-panel-card">
+
+    <h2 class="admin-panel-title">Site Settings &amp; Navigation Controls</h2>
+    <p class="text-muted small mb-4">Manage top black bar contacts, social links, hero banner texts, and the global footer information.</p>
+
+    <form action="{{ url_for('admin_update_site_settings') }}" method="POST" enctype="multipart/form-data">
+      
+      <!-- 1. TOP BLACK CONTACT RIBBON & SOCIALS -->
+      <div class="card border rounded-3 p-4 mb-4 bg-light shadow-sm">
+        <h5 class="fw-bold text-dark mb-3"><i class="fa fa-phone me-2 text-primary"></i>Top Black Ribbon &amp; Social Links</h5>
+        
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">CONTACT PHONE NUMBER</label>
+            <input type="text" name="top_phone" class="form-control" value="{{ settings.get('top_phone', '+012 345 6789') }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">CONTACT EMAIL ADDRESS</label>
+            <input type="email" name="top_email" class="form-control" value="{{ settings.get('top_email', 'kllportal@mail.com') }}" required>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold text-secondary">FACEBOOK URL</label>
+            <input type="text" name="facebook_url" class="form-control" value="{{ settings.get('facebook_url', '#') }}">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold text-secondary">TWITTER / X URL</label>
+            <input type="text" name="twitter_url" class="form-control" value="{{ settings.get('twitter_url', '#') }}">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold text-secondary">LINKEDIN URL</label>
+            <input type="text" name="linkedin_url" class="form-control" value="{{ settings.get('linkedin_url', '#') }}">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold text-secondary">INSTAGRAM URL</label>
+            <input type="text" name="instagram_url" class="form-control" value="{{ settings.get('instagram_url', '#') }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. HERO SECTION -->
+      <div class="card border rounded-3 p-4 mb-4 bg-light shadow-sm">
+        <h5 class="fw-bold text-dark mb-3"><i class="fa fa-heading me-2 text-primary"></i>Hero Banner Texts &amp; Background</h5>
+        
+        <div class="row g-3 mb-3">
+          <div class="col-12">
+            <label class="form-label small fw-bold text-secondary">MAIN HERO TITLE</label>
+            <input type="text" name="hero_title" class="form-control" value="{{ hero_title }}" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label small fw-bold text-secondary">HERO SUBTITLE / TAGLINE</label>
+            <textarea name="hero_subtitle" class="form-control" rows="2" required>{{ hero_subtitle }}</textarea>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label small fw-bold text-secondary">CURRENT HERO IMAGE</label>
+            <div class="text-center p-3 bg-white rounded border">
+              {% if hero_image %}
+                <img src="{{ url_for('static', filename='uploads/' + hero_image) }}"
+                    alt="Hero Banner"
+                    class="img-fluid rounded shadow-sm"
+                    style="max-height: 200px; width: 100%; object-fit: cover;"
+                    onerror="this.onerror=null; this.src='{{ hero_image }}';">
+              {% else %}
+                <p class="text-muted mb-0 py-3">No custom banner image uploaded.</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label small fw-bold text-secondary">UPLOAD NEW BANNER IMAGE (OPTIONAL)</label>
+            <input type="file" name="hero_banner_image" class="form-control" accept="image/*">
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. FOOTER ("GET IN TOUCH") SETTINGS -->
+    <div class="card border rounded-3 p-4 mb-4 bg-light shadow-sm">
+      <h5 class="fw-bold text-dark mb-3"><i class="fa fa-map-marked-alt me-2 text-primary"></i>Global Footer ("Get In Touch")</h5>
+
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label small fw-bold text-secondary">CAMPUS ADDRESS</label>
+          <textarea name="footer_address" class="form-control" rows="2" required>{{ settings.get('footer_address', 'Marawoy, Lipa City, Batangas, Philippines\nKolehiyo ng Lungsod ng Lipa Main Campus') }}</textarea>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-secondary">FOOTER PHONE NUMBER</label>
+          <input type="text" name="footer_phone" class="form-control" value="{{ settings.get('footer_phone', '+012 345 6789') }}" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label small fw-bold text-secondary">FOOTER EMAIL</label>
+          <input type="email" name="footer_email" class="form-control" value="{{ settings.get('footer_email', 'kllportal@mail.com') }}" required>
+        </div>
+
+        <!-- EDITABLE MAP LINK INPUT -->
+        <div class="col-12">
+          <label class="form-label small fw-bold text-secondary">GOOGLE MAP EMBED LINK OR FULL &lt;IFRAME&gt; CODE</label>
+          <textarea name="footer_map_url" class="form-control" rows="3" placeholder="Paste Google Maps embed URL (https://maps.google.com/...) or full <iframe> code" required>{{ settings.get('footer_map_url', 'https://maps.google.com/maps?q=Kolehiyo%20ng%20Lungsod%20ng%20Lipa&t=&z=15&ie=UTF8&iwloc=&output=embed') }}</textarea>
+          <small class="text-muted d-block mt-1">
+            <strong>How to get this:</strong> Go to Google Maps &rarr; Search your location &rarr; Click <em>Share</em> &rarr; Click <em>Embed a map</em> &rarr; Copy and paste either the link or the entire HTML code here.
+          </small>
+        </div>
+
+        <!-- CURRENT MAP PREVIEW IN ADMIN -->
+        <div class="col-12">
+          <label class="form-label small fw-bold text-secondary">CURRENT FOOTER MAP PREVIEW</label>
+          <div class="rounded border overflow-hidden shadow-sm" style="height: 200px;">
+            <iframe 
+              src="{{ settings.get('footer_map_url', 'https://maps.google.com/maps?q=Kolehiyo%20ng%20Lungsod%20ng%20Lipa&t=&z=15&ie=UTF8&iwloc=&output=embed') }}" 
+              style="width: 100%; height: 100%; border: 0;" 
+              loading="lazy" 
+              referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <!-- SUBMIT -->
+      <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary px-5 py-2 fw-bold" style="background-color: #1e60d5; border: none; border-radius: 6px;">
+          <i class="fa fa-save me-1"></i> Save All Site Settings
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+
+  <!-- BOTTOM SCREEN FOOTER -->
+  <footer class="admin-canvas-footer mt-4">
+    <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
+    <div>
+      <a href="#">SchoolAdmin</a>
+      <a href="#">About Us</a>
+    </div>
+  </footer>
+
+  {% endblock %}

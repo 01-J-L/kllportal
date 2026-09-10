@@ -1,0 +1,117 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+<div class="admin-panel-card">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h2 class="admin-panel-title mb-0">Inquiries &amp; Feedback</h2>
+    <div class="d-flex gap-2">
+      <span class="badge bg-primary fs-6">{{ inquiries|length }} total</span>
+      {% if inquiries %}
+      <form action="{{ url_for('admin_clear_inquiries') }}" method="POST" onsubmit="return confirm('Clear ALL inquiries? This cannot be undone.');">
+        <button class="btn-tbl-delete" type="submit">CLEAR ALL</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if inquiries %}
+  <div class="table-responsive">
+    <table class="admin-data-table">
+      <thead>
+        <tr>
+          <th>NAME</th>
+          <th>EMAIL</th>
+          <th>PHONE</th>
+          <th>SUBJECT</th>
+          <th>MESSAGE</th>
+          <th>DATE</th>
+          <th class="text-center">ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inq in inquiries %}
+        <tr>
+          <td class="fw-bold">{{ inq.name }}</td>
+          <td>{{ inq.email }}</td>
+          <td>{{ inq.phone or '-' }}</td>
+          <td>{{ inq.subject or '-' }}</td>
+          <td style="max-width: 250px;">
+            <span class="text-truncate d-inline-block" style="max-width: 230px;" title="{{ inq.message }}">
+              {{ inq.message[:80] }}{% if inq.message|length > 80 %}...{% endif %}
+            </span>
+          </td>
+          <td class="text-nowrap">{{ inq.created_at.strftime('%b %d, %Y %I:%M %p') if inq.created_at else '-' }}</td>
+          <td class="text-center" style="white-space: nowrap;">
+            <button type="button" class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showInquiry{{ inq.id }}">
+              SHOW
+            </button>
+            <form action="{{ url_for('admin_delete_inquiry', id=inq.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this inquiry?');">
+              <button class="btn-tbl-delete" type="submit">DELETE</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="fa fa-inbox fa-3x mb-3 d-block" style="color: #cbd5e1;"></i>
+    <p class="mb-0">No inquiries submitted yet.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- SHOW MODALS -->
+{% for inq in inquiries %}
+<div class="modal fade" id="showInquiry{{ inq.id }}" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden; background: #ffffff;">
+      
+      <div class="modal-header text-white" style="background: linear-gradient(135deg, #1e60d5, #15459b); padding: 18px 24px;">
+        <h5 class="modal-title fw-bold">
+          <i class="fa fa-envelope me-2"></i>Inquiry from {{ inq.name }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4" style="background: #ffffff;">
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">NAME</label>
+            <p class="mb-0">{{ inq.name }}</p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">EMAIL</label>
+            <p class="mb-0"><a href="mailto:{{ inq.email }}">{{ inq.email }}</a></p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">PHONE</label>
+            <p class="mb-0">{{ inq.phone or 'N/A' }}</p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">SUBJECT</label>
+            <p class="mb-0">{{ inq.subject or 'N/A' }}</p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">DATE SUBMITTED</label>
+            <p class="mb-0">{{ inq.created_at.strftime('%B %d, %Y at %I:%M %p') if inq.created_at else 'N/A' }}</p>
+          </div>
+        </div>
+        <hr>
+        <label class="form-label small fw-bold text-secondary">MESSAGE</label>
+        <div class="p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0; white-space: pre-wrap;">{{ inq.message }}</div>
+      </div>
+
+      <div class="modal-footer" style="border-top: 1px solid #f1f5f9; background: #f8fafc;">
+        <a href="mailto:{{ inq.email }}?subject=Re: {{ inq.subject or 'Your Inquiry' }}" class="btn btn-sm btn-primary" style="background: #1e60d5; border: none;">
+          <i class="fa fa-reply me-1"></i> Reply via Email
+        </a>
+        <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}

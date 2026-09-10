@@ -1,0 +1,79 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<!-- HERO BANNER WITH TORN PAPER BOTTOM -->
+<div class="about-hero-wrapper" style="background: linear-gradient(rgba(30, 96, 213, 0.88), rgba(26, 84, 190, 0.92)), url('{{ url_for('static', filename='uploads/' + hero_image) if hero_image and not hero_image.startswith('http') else hero_image }}') center/cover no-repeat;">
+  <h1 class="about-hero-title">COURSES AND PROGRAMS<br>PAGE</h1>
+  <div class="torn-paper-edge"></div>
+</div>
+
+<div class="courses-container">
+  
+  <div class="accordion kll-accordion" id="kllCoursesAccordion">
+    
+    {% if courses %}
+      {% for c in courses %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingCourse{{ c.id }}">
+          <!-- Added 'collapsed' and aria-expanded="false" so all items start closed -->
+          <button class="accordion-button collapsed" 
+                  type="button" 
+                  data-bs-toggle="collapse" 
+                  data-bs-target="#collapseCourse{{ c.id }}" 
+                  aria-expanded="false" 
+                  aria-controls="collapseCourse{{ c.id }}">
+            {{ c.course_name }} [{{ c.course_code }}]
+          </button>
+        </h2>
+        <!-- Removed 'show' class so the body starts hidden -->
+        <div id="collapseCourse{{ c.id }}" 
+             class="accordion-collapse collapse" 
+             aria-labelledby="headingCourse{{ c.id }}" 
+             data-bs-parent="#kllCoursesAccordion">
+          <div class="accordion-body">
+            
+            {% if c.description %}
+            <div class="course-detail-title">Overview</div>
+            <p style="white-space: pre-line;">{{ c.description }}</p>
+            {% endif %}
+
+            {% if c.curriculum_description %}
+            <div class="course-detail-title">Curriculum Description</div>
+            <p style="white-space: pre-line;">{{ c.curriculum_description }}</p>
+            {% endif %}
+
+            {% if c.objectives %}
+            <div class="course-detail-title">Program Objectives</div>
+            <p style="white-space: pre-line;">{{ c.objectives }}</p>
+            {% endif %}
+
+            {% if c.outcomes %}
+            <div class="course-detail-title">Program Outcomes</div>
+            <p style="white-space: pre-line;">{{ c.outcomes }}</p>
+            {% endif %}
+
+            <div class="course-detail-title">Credits</div>
+            <p class="text-muted"><span class="badge bg-primary fs-6">{{ c.credits }} Units</span></p>
+
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="text-center py-5 bg-white rounded shadow-sm">
+        <i class="fa fa-book-open fa-3x text-muted mb-3"></i>
+        <h5 class="text-dark fw-bold">No academic programs available yet.</h5>
+        <p class="text-muted mb-0">Courses will appear here once added in the admin portal.</p>
+      </div>
+    {% endif %}
+
+  </div>
+
+</div>
+
+<!-- Floating Back-to-Top Blue Button -->
+<a href="#" class="btn-floating-top" title="Back to Top">
+  <i class="fa fa-angle-double-up"></i>
+</a>
+
+{% endblock %}

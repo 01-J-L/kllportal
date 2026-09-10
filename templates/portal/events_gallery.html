@@ -1,0 +1,93 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<!-- HERO BANNER WITH TORN PAPER BOTTOM & SEARCH BAR -->
+<div class="about-hero-wrapper" style="background: linear-gradient(rgba(30, 96, 213, 0.88), rgba(26, 84, 190, 0.92)), url('{{ url_for('static', filename='uploads/' + hero_image) if hero_image and not hero_image.startswith('http') else hero_image }}') center/cover no-repeat;">
+  <h1 class="about-hero-title">EVENTS GALLERY PAGE</h1>
+
+  <div class="gallery-search-box">
+    <select class="search-dropdown">
+      <option value="ALL">ALL &#9662;</option>
+    </select>
+    <input type="text" id="galleryKeywordInput" class="search-input" placeholder="Search Keyword">
+    <button type="button" class="search-btn" onclick="filterGallery()">Search</button>
+  </div>
+
+  <div class="torn-paper-edge"></div>
+</div>
+
+<div class="events-gallery-wrapper">
+  <div class="row g-4" id="galleryContainer">
+
+    {% if events %}
+      {% for ev in events %}
+      <div class="col-lg-3 col-md-4 col-sm-6 gallery-item-col" data-title="{{ ev.title }}">
+        <div class="event-poster-card d-flex flex-column justify-content-between h-100">
+          <div>
+            <div class="event-poster-img-wrap">
+              {% if ev.image_url %}
+              <img src="{{ url_for('static', filename='uploads/' + ev.image_url) }}" 
+                   alt="{{ ev.title }}"
+                   onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80';">
+              {% else %}
+              <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80" alt="{{ ev.title }}">
+              {% endif %}
+            </div>
+            <div class="event-poster-body">
+              <div class="event-poster-title">{{ ev.title }}</div>
+              <p class="event-poster-date">
+                <i class="fa fa-calendar-alt me-1 text-primary"></i> 
+                {{ ev.event_date.strftime('%B %d, %Y') if ev.event_date else 'Campus Event' }}
+              </p>
+              <p class="small text-muted mt-2 mb-0" style="white-space: pre-line;">{{ ev.description }}</p>
+            </div>
+          </div>
+
+          <!-- DYNAMIC EVENT LINK -->
+          {% if ev.link_url %}
+          <div class="px-3 pb-3 pt-2">
+            <a href="{{ ev.link_url }}" target="_blank" class="btn btn-sm btn-outline-primary w-100 fw-bold">
+              <i class="fa fa-external-link-alt me-1"></i> View Event Details 
+            </a>
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12 text-center py-5 bg-white rounded shadow-sm">
+        <i class="fa fa-trophy fa-3x text-muted mb-3"></i>
+        <h5 class="text-dark fw-bold">No events posted yet.</h5>
+        <p class="text-muted mb-0">Events and announcements will appear here once published.</p>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Floating Back-to-Top Blue Button -->
+<a href="#" class="btn-floating-top" title="Back to Top">
+  <i class="fa fa-angle-double-up"></i>
+</a>
+
+<!-- Live Client-side Filter Script -->
+<script>
+  function filterGallery() {
+    const term = document.getElementById('galleryKeywordInput').value.toLowerCase().trim();
+    const items = document.querySelectorAll('.gallery-item-col');
+    
+    items.forEach(item => {
+      const title = item.getAttribute('data-title').toLowerCase();
+      if (title.includes(term)) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  document.getElementById('galleryKeywordInput').addEventListener('keyup', filterGallery);
+</script>
+
+{% endblock %}

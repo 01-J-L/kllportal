@@ -1,0 +1,262 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+
+
+<!-- MAIN WHITE CARD -->
+<div class="admin-panel-card">
+
+  <h2 class="admin-panel-title">Users Management</h2>
+
+  <!-- Green CREATE NEW USER Button -->
+  <button class="btn-admin-green mb-3" data-bs-toggle="modal" data-bs-target="#createUserModal">
+    CREATE NEW USER
+  </button>
+
+  <!-- TABLE -->
+  <div class="table-responsive">
+    <table class="admin-data-table">
+      <thead>
+        <tr>
+          <th>NAME</th>
+          <th>EMAIL</th>
+          <th>PHONE</th>
+          <th class="text-center">ROLES</th>
+          <th class="text-center">STATUS</th>
+          <th class="text-center">ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="fw-bold">{{ u.name }}</td>
+          <td>{{ u.email }}</td>
+          <td>{{ u.phone_number or '-' }}</td>
+          <td class="text-center">
+            <span class="role-badge-pill">
+              {{ u.role.replace('_', ' ') }}
+            </span>
+          </td>
+          <td class="text-center">
+            <span class="badge {{ 'bg-success' if u.status == 'Active' else 'bg-danger' }}">
+              {{ u.status }}
+            </span>
+          </td>
+          <td class="text-center" style="white-space: nowrap;">
+            <!-- 1. Blue SHOW Button -->
+            <button type="button" class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showUserModal{{ u.id }}">
+              SHOW
+            </button>
+
+            <!-- 2. Pink EDIT Button -->
+            <button type="button" class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editUserModal{{ u.id }}">
+              EDIT
+            </button>
+
+            <!-- 3. Red DELETE Button -->
+            <form action="{{ url_for('admin_delete_user', id=u.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete user: {{ u.name }}?');">
+              <button class="btn-tbl-delete" type="submit">
+                DELETE
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- ALL MODALS PLACED OUTSIDE THE TABLE (CRITICAL FIX)        -->
+<!-- ========================================================= -->
+
+{% for u in users %}
+
+<!-- ================= EDIT USER MODAL ================= -->
+<div class="modal fade" id="editUserModal{{ u.id }}" tabindex="-1" aria-labelledby="editUserLabel{{ u.id }}" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden; background: #ffffff;">
+      
+      <!-- Pink Header (Matches your screenshot) -->
+      <div class="modal-header text-white" style="background: linear-gradient(135deg, #d81b60, #ad1457); padding: 18px 24px;">
+        <h5 class="modal-title fw-bold" id="editUserLabel{{ u.id }}">
+          <i class="fa fa-user-edit me-2"></i>Edit User: {{ u.name }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form action="{{ url_for('admin_edit_user', id=u.id) }}" method="POST">
+        <div class="modal-body p-4 text-start" style="background: #ffffff;">
+          <div class="row g-3">
+            
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">FULL NAME</label>
+              <input type="text" name="name" class="form-control" value="{{ u.name }}" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">EMAIL ADDRESS</label>
+              <input type="email" name="email" class="form-control" value="{{ u.email }}" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">PHONE NUMBER</label>
+              <input type="text" name="phone_number" class="form-control" value="{{ u.phone_number or '' }}" placeholder="09xxxxxxxxx">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">RESET PASSWORD (OPTIONAL)</label>
+              <input type="password" name="password" class="form-control" placeholder="Leave blank to keep existing password">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">ROLE</label>
+              <select name="role" class="form-select" required>
+                <option value="STUDENT" {% if u.role == 'STUDENT' %}selected{% endif %}>STUDENT</option>
+                <option value="TEACHER" {% if u.role == 'TEACHER' %}selected{% endif %}>TEACHER</option>
+                <option value="ADMIN" {% if u.role == 'ADMIN' %}selected{% endif %}>ADMIN</option>
+                <option value="SUPER_ADMIN" {% if u.role == 'SUPER_ADMIN' %}selected{% endif %}>SUPER ADMIN</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">ACCOUNT STATUS</label>
+              <select name="status" class="form-select" required>
+                <option value="Active" {% if u.status == 'Active' %}selected{% endif %}>Active</option>
+                <option value="Suspended" {% if u.status == 'Suspended' %}selected{% endif %}>Suspended</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer px-4 py-3" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+          <button type="button" class="btn btn-secondary px-4 fw-semibold" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn text-white px-4 fw-semibold" style="background-color: #d81b60;">Save Changes</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= SHOW USER MODAL ================= -->
+<div class="modal fade" id="showUserModal{{ u.id }}" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden; background: #ffffff;">
+      <div class="modal-header text-white" style="background-color: #1e60d5; padding: 18px 24px;">
+        <h5 class="modal-title fw-bold"><i class="fa fa-id-card me-2"></i>User Profile: {{ u.name }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4 text-start" style="background: #ffffff;">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded border">
+              <small class="text-muted fw-bold d-block mb-1">FULL NAME</small>
+              <span class="fw-bold">{{ u.name }}</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded border">
+              <small class="text-muted fw-bold d-block mb-1">EMAIL ADDRESS</small>
+              <span class="fw-bold">{{ u.email }}</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded border">
+              <small class="text-muted fw-bold d-block mb-1">PHONE NUMBER</small>
+              <span class="fw-bold">{{ u.phone_number or 'N/A' }}</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded border">
+              <small class="text-muted fw-bold d-block mb-1">ROLE</small>
+              <span class="badge bg-primary fs-6">{{ u.role }}</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded border">
+              <small class="text-muted fw-bold d-block mb-1">STATUS</small>
+              <span class="badge {{ 'bg-success' if u.status == 'Active' else 'bg-danger' }} fs-6">{{ u.status }}</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded border">
+              <small class="text-muted fw-bold d-block mb-1">REGISTERED DATE</small>
+              <span class="fw-bold">{{ u.created_at }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer px-4 py-3" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endfor %}
+
+<!-- ================= CREATE NEW USER MODAL ================= -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden; background: #ffffff;">
+      <div class="modal-header text-white" style="background-color: #10b981; padding: 18px 24px;">
+        <h5 class="modal-title fw-bold"><i class="fa fa-user-plus me-2"></i>Register New User</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{{ url_for('admin_create_user') }}" method="POST">
+        <div class="modal-body p-4 text-start" style="background: #ffffff;">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">FULL NAME</label>
+              <input type="text" name="name" class="form-control" placeholder="e.g. Juan Dela Cruz" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">EMAIL ADDRESS</label>
+              <input type="email" name="email" class="form-control" placeholder="e.g. juan@student.com" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">PHONE NUMBER</label>
+              <input type="text" name="phone_number" class="form-control" placeholder="09xxxxxxxxx">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">PASSWORD</label>
+              <input type="password" name="password" class="form-control" placeholder="Create password" required>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label small fw-bold text-secondary">SELECT ROLE</label>
+              <select name="role" class="form-select" required>
+                <option value="STUDENT">STUDENT</option>
+                <option value="TEACHER">TEACHER</option>
+                <option value="ADMIN">ADMIN</option>
+                <option value="SUPER_ADMIN">SUPER ADMIN</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer px-4 py-3" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+          <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success px-4 fw-semibold">Save User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM SCREEN FOOTER -->
+<footer class="admin-canvas-footer mt-4">
+  <div>
+    &copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.
+  </div>
+  <div>
+    <a href="#">SchoolAdmin</a>
+    <a href="#">About Us</a>
+    <a href="#">Blog</a>
+    <a href="#">License</a>
+  </div>
+</footer>
+
+{% endblock %}

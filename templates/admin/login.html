@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SchoolAdmin - Sign In</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="schooladmin-login-body">
+
+  <div></div>
+
+  <!-- CENTER FLOATING CARD (Screenshot exact) -->
+  <div class="schooladmin-card-wrapper">
+    <div class="schooladmin-login-card">
+      
+      <!-- Top Pink Floating Header Box -->
+      <div class="schooladmin-card-header-floating">
+        <h3>SchoolAdmin</h3>
+        <p>Sign In</p>
+      </div>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, msg in messages %}
+            <div class="alert alert-{{ category }} py-2 px-3 small text-start mb-3" role="alert">
+              {{ msg }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Form -->
+      <form method="POST" action="{{ url_for('admin_login') }}">
+        <div>
+          <input 
+            type="email" 
+            name="email" 
+            class="schooladmin-form-input" 
+            placeholder="Enter Email Address" 
+            
+            required>
+        </div>
+
+        <div>
+          <input 
+            type="password" 
+            name="password" 
+            class="schooladmin-form-input" 
+            placeholder="Enter Password" 
+            
+            required>
+        </div>
+
+        <button type="submit" class="btn-schooladmin-login">
+          LOGIN
+        </button>
+
+        <p class="schooladmin-card-footer-note">
+          Don't have an account?<br>
+          Ask your administrator to register your account
+        </p>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- SCREEN BOTTOM FOOTER (Screenshot exact) -->
+  <footer class="schooladmin-screen-footer">
+    <div>
+      &copy; 2024, made with by <span>SchoolAdmin</span>
+    </div>
+    <div>
+      <span>SchoolAdmin</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

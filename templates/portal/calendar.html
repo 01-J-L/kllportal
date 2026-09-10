@@ -1,0 +1,183 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<!-- HERO BANNER WITH TORN PAPER BOTTOM -->
+<div class="about-hero-wrapper" style="background: linear-gradient(rgba(30, 96, 213, 0.88), rgba(26, 84, 190, 0.92)), url('{{ url_for('static', filename='uploads/' + hero_image) if hero_image and not hero_image.startswith('http') else hero_image }}') center/cover no-repeat;">
+  <h1 class="about-hero-title">ACADEMIC CALENDAR</h1>
+  <!-- Ripped paper effect -->
+  <div class="torn-paper-edge"></div>
+</div>
+
+<div class="calendar-wrapper">
+  <div id="calendar"></div>
+</div>
+
+<!-- EVENT DETAIL MODAL -->
+<div class="modal fade" id="eventDetailModal" tabindex="-1" aria-labelledby="eventDetailLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header" style="background-color: #1e60d5; color: #fff;">
+        <h5 class="modal-title fw-bold" id="eventDetailLabel">Event Title</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3">
+          <small class="text-muted fw-bold">DATE</small>
+          <p id="eventDetailDate" class="mb-0"></p>
+        </div>
+        <div>
+          <small class="text-muted fw-bold">DESCRIPTION</small>
+          <p id="eventDetailDesc" class="mb-0" style="white-space: pre-line;">No description available.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Back-to-Top Blue Button -->
+<a href="#" class="btn-floating-top" title="Back to Top">
+  <i class="fa fa-angle-double-up"></i>
+</a>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var calendarEl = document.getElementById('calendar');
+
+  var calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    now: new Date(),
+    headerToolbar: {
+      left: 'today prev,next',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+    },
+    buttonText: {
+      today: 'Today',
+      month: 'Month',
+      week: 'Week',
+      day: 'Day',
+      list: 'Agenda'
+    },
+    events: '{{ url_for("calendar_events") }}',
+    eventClick: function(info) {
+      info.jsEvent.preventDefault();
+      var event = info.event;
+      var title = event.title;
+      var start = event.start;
+      var end = event.end;
+      var description = event.extendedProps.description || 'No description available.';
+
+      var dateStr = start.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      if (end && end > start) {
+        dateStr += ' to ' + end.toLocaleDateString('en-US', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+      }
+
+      document.getElementById('eventDetailLabel').textContent = title;
+      document.getElementById('eventDetailDate').textContent = dateStr;
+      document.getElementById('eventDetailDesc').textContent = description;
+
+      var modal = new bootstrap.Modal(document.getElementById('eventDetailModal'));
+      modal.show();
+    },
+    eventDisplay: 'block',
+    dayMaxEvents: 3,
+    nowIndicator: true
+  });
+
+  calendar.render();
+});
+</script>
+
+<style>
+  #calendar {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    padding: 20px;
+  }
+  .fc .fc-toolbar-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+  .fc .fc-button-primary {
+    background-color: #1e60d5;
+    border-color: #1e60d5;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .fc .fc-button-primary:hover {
+    background-color: #164cb0;
+    border-color: #164cb0;
+  }
+  .fc .fc-button-primary:not(:disabled).fc-button-active,
+  .fc .fc-button-primary:not(:disabled):active {
+    background-color: #0f3d91;
+    border-color: #0f3d91;
+  }
+  .fc .fc-daygrid-day-number {
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 6px 8px;
+  }
+  .fc .fc-event {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 1px 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .fc .fc-day-today {
+    background-color: #eff6ff !important;
+  }
+  .fc th {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #6b7280;
+  }
+  .fc .fc-col-header-cell-cushion {
+    padding: 8px 0;
+  }
+  .fc .fc-scrollgrid {
+    border-color: #e5e7eb;
+  }
+  .fc .fc-scrollgrid td, .fc .fc-scrollgrid th {
+    border-color: #e5e7eb;
+  }
+  @media (max-width: 767px) {
+    #calendar {
+      padding: 10px;
+    }
+    .fc .fc-toolbar {
+      flex-direction: column;
+      gap: 8px;
+    }
+    .fc .fc-toolbar-title {
+      font-size: 1.1rem;
+    }
+    .fc .fc-button {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+    }
+    .fc .fc-daygrid-day-number {
+      font-size: 0.78rem;
+      padding: 4px 4px;
+    }
+    .fc th {
+      font-size: 0.72rem;
+    }
+    .fc .fc-event {
+      font-size: 0.68rem;
+    }
+  }
+</style>
+
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+
+
+<!-- MAIN WHITE CARD -->
+<div class="admin-panel-card">
+
+  <h2 class="admin-panel-title">Academic Calendar Management</h2>
+
+  <!-- Green CREATE NEW Button -->
+  <button class="btn-admin-green" data-bs-toggle="modal" data-bs-target="#createCalendarModal">
+    CREATE NEW ACADEMIC CALENDAR
+  </button>
+
+  <!-- TABLE WITH SHOW, EDIT, DELETE -->
+  <div class="table-responsive">
+    <table class="admin-data-table">
+      <thead>
+        <tr>
+          <th>TITLE</th>
+          <th>DESCRIPTION</th>
+          <th>START DATE</th>
+          <th>END DATE</th>
+          <th class="text-center">IS ACTIVE</th>
+          <th class="text-center">ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        {% for ev in events %}
+        <tr>
+          <td class="fw-bold">{{ ev.title }}</td>
+          <td class="text-muted" style="max-width: 250px;">{{ ev.description[:80] }}{% if ev.description|length > 80 %}...{% endif %}</td>
+          <td style="white-space: nowrap;">{{ ev.start_date.strftime('%b %d, %Y %I:%M %p') if ev.start_date else '' }}</td>
+          <td style="white-space: nowrap;">{{ ev.end_date.strftime('%b %d, %Y %I:%M %p') if ev.end_date else '' }}</td>
+          <td class="text-center">
+            <span class="badge {{ 'bg-success' if ev.is_active else 'bg-secondary' }}">
+              {{ 'Active' if ev.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="text-center" style="white-space: nowrap;">
+
+            <!-- 1. Blue SHOW Button -->
+            <button class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showCal{{ ev.id }}">
+              SHOW
+            </button>
+
+            <!-- 2. Pink EDIT Button -->
+            <button class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editCal{{ ev.id }}">
+              EDIT
+            </button>
+
+            <!-- 3. Red DELETE Button -->
+            <form action="{{ url_for('admin_delete_calendar', id=ev.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete {{ ev.title }}?');">
+              <button class="btn-tbl-delete" type="submit">
+                DELETE
+              </button>
+            </form>
+
+          </td>
+        </tr>
+
+        <!-- ================= SHOW CALENDAR MODAL ================= -->
+        <div class="modal fade" id="showCal{{ ev.id }}" tabindex="-1">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+              <div class="modal-header" style="background-color: #1e60d5; color: #fff;">
+                <h5 class="modal-title fw-bold">{{ ev.title }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body p-4 text-start">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="p-3 bg-light rounded">
+                      <small class="text-muted fw-bold d-block mb-1">START DATE & TIME</small>
+                      <span class="fw-bold">{{ ev.start_date.strftime('%B %d, %Y at %I:%M %p') if ev.start_date else 'N/A' }}</span>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="p-3 bg-light rounded">
+                      <small class="text-muted fw-bold d-block mb-1">END DATE & TIME</small>
+                      <span class="fw-bold">{{ ev.end_date.strftime('%B %d, %Y at %I:%M %p') if ev.end_date else 'N/A' }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <small class="text-muted fw-bold d-block mb-1">DESCRIPTION</small>
+                  <p class="mb-0" style="white-space: pre-line; line-height: 1.7;">{{ ev.description }}</p>
+                </div>
+                <div>
+                  <small class="text-muted fw-bold d-block mb-1">STATUS</small>
+                  <span class="badge {{ 'bg-success' if ev.is_active else 'bg-secondary' }} fs-6">
+                    {{ 'Active' if ev.is_active else 'Inactive' }}
+                  </span>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= EDIT CALENDAR MODAL ================= -->
+        <div class="modal fade" id="editCal{{ ev.id }}" tabindex="-1">
+          <div class="modal-dialog modal-lg">
+            <form class="modal-content border-0 shadow" action="{{ url_for('admin_edit_calendar', id=ev.id) }}" method="POST">
+              <div class="modal-header" style="background-color: #ec4899; color: #fff;">
+                <h5 class="modal-title fw-bold">Edit Calendar Event</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body p-4 text-start">
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Event Title</label>
+                  <input type="text" name="title" class="form-control" value="{{ ev.title }}" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small fw-bold">Description</label>
+                  <textarea name="description" class="form-control" rows="4" required>{{ ev.description }}</textarea>
+                </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold">Start Date & Time</label>
+                    <input type="datetime-local" name="start_date" class="form-control"
+                           value="{{ ev.start_date.strftime('%Y-%m-%dT%H:%M') if ev.start_date else '' }}" required>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small fw-bold">End Date & Time</label>
+                    <input type="datetime-local" name="end_date" class="form-control"
+                           value="{{ ev.end_date.strftime('%Y-%m-%dT%H:%M') if ev.end_date else '' }}" required>
+                  </div>
+                </div>
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="checkbox" name="is_active" id="activeCalCheck{{ ev.id }}" {% if ev.is_active %}checked{% endif %}>
+                  <label class="form-check-label small fw-bold" for="activeCalCheck{{ ev.id }}">
+                    Is Active
+                  </label>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        {% endfor %}
+
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ================= CREATE NEW ACADEMIC CALENDAR MODAL ================= -->
+<div class="modal fade" id="createCalendarModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form class="modal-content border-0 shadow" action="{{ url_for('admin_create_calendar') }}" method="POST">
+      <div class="modal-header" style="background-color: #10b981; color: #fff;">
+        <h5 class="modal-title fw-bold">Create Academic Calendar Event</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4 text-start">
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Event Title</label>
+          <input type="text" name="title" class="form-control" placeholder="e.g. START of classes" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Description</label>
+          <textarea name="description" class="form-control" rows="4" placeholder="Enter activity details..." required></textarea>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label small fw-bold">Start Date & Time</label>
+            <input type="datetime-local" name="start_date" class="form-control" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label small fw-bold">End Date & Time</label>
+            <input type="datetime-local" name="end_date" class="form-control" required>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-success">Save Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- BOTTOM SCREEN FOOTER -->
+<footer class="admin-canvas-footer">
+  <div>
+    &copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.
+  </div>
+  <div>
+    <a href="#">SchoolAdmin</a>
+    <a href="#">About Us</a>
+    <a href="#">Blog</a>
+    <a href="#">License</a>
+  </div>
+</footer>
+
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<!-- HERO BANNER WITH TORN PAPER BOTTOM & SEARCH BAR -->
+<div class="about-hero-wrapper" style="background: linear-gradient(rgba(30, 96, 213, 0.88), rgba(26, 84, 190, 0.92)), url('{{ url_for('static', filename='uploads/' + hero_image) if hero_image and not hero_image.startswith('http') else hero_image }}') center/cover no-repeat;">
+  <h1 class="about-hero-title">STUDENT HANDBOOK</h1>
+
+  <div class="gallery-search-box">
+    <select class="search-dropdown">
+      <option value="ALL">ALL &#9662;</option>
+    </select>
+    <input type="text" id="handbookSearchInput" class="search-input" placeholder="Search Keyword">
+    <button type="button" class="search-btn" onclick="filterHandbook()">Search</button>
+  </div>
+
+  <div class="torn-paper-edge"></div>
+</div>
+
+<div class="handbook-wrapper">
+  <div class="row g-4 justify-content-center" id="handbookContainer">
+
+    {% if handbooks %}
+      {% for hb in handbooks %}
+      <div class="col-lg-3 col-md-4 col-sm-6 handbook-item-col" data-title="{{ hb.title }}">
+        <div class="pdf-doc-card">
+          
+          <!-- Adobe Document Glyph Icon -->
+          <div class="adobe-pdf-icon-wrapper">
+            <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 10 H140 L190 60 V230 H10 Z" stroke="#FF0000" stroke-width="10" stroke-linejoin="round" fill="#FFFFFF"/>
+              <path d="M140 10 V60 H190" stroke="#FF0000" stroke-width="10" stroke-linejoin="round" fill="none"/>
+              <path d="M100 80 C90 80 85 95 95 125 C105 155 120 170 120 185 C120 195 110 195 95 190 C70 180 50 160 35 180 C25 192 35 205 55 205 C90 205 140 190 155 160 C165 140 150 125 130 145 C115 160 105 175 90 170 C80 165 85 150 95 135 C110 110 115 80 100 80 Z" stroke="#FF0000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </div>
+
+          <div class="pdf-doc-title">{{ hb.title }}</div>
+          <div class="pdf-doc-size">{{ hb.file_size|safe }}</div>
+          
+          <a href="{{ url_for('static', filename='uploads/' + hb.file_url) }}" class="btn-download-pdf" target="_blank" download>
+            <i class="fa fa-download"></i> Download
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12 text-center py-5 bg-white rounded shadow-sm">
+        <i class="fa fa-file-pdf fa-3x text-muted mb-3"></i>
+        <h5 class="text-dark fw-bold">No student handbooks uploaded yet.</h5>
+        <p class="text-muted mb-0">Policy documents and guidelines will appear here once published by the registrar.</p>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Floating Back-to-Top Blue Button -->
+<a href="#" class="btn-floating-top" title="Back to Top">
+  <i class="fa fa-angle-double-up"></i>
+</a>
+
+<!-- Live Client-side Filter Script -->
+<script>
+  function filterHandbook() {
+    const term = document.getElementById('handbookSearchInput').value.toLowerCase().trim();
+    const items = document.querySelectorAll('.handbook-item-col');
+
+    items.forEach(item => {
+      const title = item.getAttribute('data-title').toLowerCase();
+      if (title.includes(term)) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  document.getElementById('handbookSearchInput').addEventListener('keyup', filterHandbook);
+</script>
+
+{% endblock %}

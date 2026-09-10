@@ -1,0 +1,232 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+
+
+<!-- MAIN WHITE CARD -->
+<div class="admin-panel-card">
+
+  <h2 class="admin-panel-title">Virtual Tour Management</h2>
+
+  <button type="button" class="btn-admin-green mb-3" data-bs-toggle="modal" data-bs-target="#createTourModal">
+    CREATE VIRTUAL TOUR
+  </button>
+
+  <div class="table-responsive">
+    <table class="admin-data-table">
+      <thead>
+        <tr>
+          <th>TITLE</th>
+          <th>DESCRIPTION</th>
+          <th>MEDIA SOURCE</th>
+          <th class="text-center">TYPE</th>
+          <th class="text-center">IS ACTIVE</th>
+          <th class="text-center">ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tours %}
+        <tr>
+          <td class="fw-bold">{{ t.title }}</td>
+          <td class="text-muted" style="max-width: 280px;">{{ t.description[:60] }}{% if t.description|length > 60 %}...{% endif %}</td>
+          <td>
+            {% if t.file_url %}
+              <span class="badge bg-secondary"><i class="fa fa-file me-1"></i> {{ t.file_url }}</span>
+            {% elif t.video_id %}
+              <code class="text-primary">{{ t.video_id[:30] }}</code>
+            {% else %}
+              <span class="text-muted">None</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <span class="badge {{ 'bg-danger' if t.tour_type == 'YOUTUBE' else ('bg-success' if t.tour_type == 'FILE' else 'bg-info') }}">
+              {{ t.tour_type }}
+            </span>
+          </td>
+          <td class="text-center">
+            <span class="badge {{ 'bg-success' if t.is_active else 'bg-secondary' }}">
+              {{ 'Active' if t.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="text-center" style="white-space: nowrap;">
+            <button type="button" class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showTourModal{{ t.id }}">
+              SHOW
+            </button>
+            <button type="button" class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editTourModal{{ t.id }}">
+              EDIT
+            </button>
+            <form action="{{ url_for('admin_delete_virtual_tour', id=t.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete {{ t.title }}?');">
+              <button class="btn-tbl-delete" type="submit">
+                DELETE
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- MODALS PLACED OUTSIDE THE TABLE (NO STACKING / FREEZING)  -->
+<!-- ========================================================= -->
+
+{% for t in tours %}
+
+<!-- SHOW VIRTUAL TOUR MODAL -->
+<div class="modal fade" id="showTourModal{{ t.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-header-view">
+        <h5 class="modal-title fw-bold"><i class="fa fa-film me-2"></i>{{ t.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        
+        <!-- MEDIA DISPLAY (FILE VS LINK) -->
+        <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm mb-3 bg-dark">
+          {% if t.file_url and (t.file_url.endswith('.mp4') or t.file_url.endswith('.webm')) %}
+            <video controls class="w-100 h-100">
+              <source src="{{ url_for('static', filename='uploads/' + t.file_url) }}">
+            </video>
+          {% elif t.file_url %}
+            <img src="{{ url_for('static', filename='uploads/' + t.file_url) }}" alt="{{ t.title }}" style="width: 100%; height: 100%; object-fit: contain;">
+          {% elif t.video_id and ('http://' in t.video_id or 'https://' in t.video_id) %}
+            <iframe src="{{ t.video_id }}" title="{{ t.title }}" allowfullscreen></iframe>
+          {% elif t.video_id %}
+            <iframe src="https://www.youtube.com/embed/{{ t.video_id }}" title="{{ t.title }}" allowfullscreen></iframe>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">DESCRIPTION</label>
+          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.6;">{{ t.description }}</div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">MEDIA SOURCE</label>
+            <div class="p-2 bg-light rounded border">
+              <code>{{ t.file_url or t.video_id }}</code>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">STATUS</label>
+            <div class="p-2 bg-light rounded border">
+              <span class="badge {{ 'bg-success' if t.is_active else 'bg-secondary' }} fs-6">
+                {{ 'Active' if t.is_active else 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT VIRTUAL TOUR MODAL -->
+<div class="modal fade" id="editTourModal{{ t.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_edit_virtual_tour', id=t.id) }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-edit">
+        <h5 class="modal-title fw-bold"><i class="fa fa-pen me-2"></i>Edit Tour: {{ t.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Tour Title</label>
+            <input type="text" name="title" class="form-control" value="{{ t.title }}" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="3" required>{{ t.description }}</textarea>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Option A: Video Link or YouTube URL / ID</label>
+            <input type="text" name="video_id" class="form-control" value="{{ t.video_id or '' }}" placeholder="e.g. https://www.youtube.com/watch?v=7udcRWZVYTM">
+            <small class="text-muted">Enter full YouTube URL, 11-digit ID, or 360 virtual tour link.</small>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Option B: Upload Video or Panoramic Image</label>
+            <input type="file" name="tour_file" class="form-control" accept="video/mp4,video/webm,image/*">
+            <small class="text-muted">Supports MP4, WebM video, or 360 photo.</small>
+            {% if t.file_url %}
+            <div class="small text-success mt-1">Current file: {{ t.file_url }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-12">
+            <div class="form-check form-switch mt-2">
+              <input class="form-check-input" type="checkbox" name="is_active" id="activeTour{{ t.id }}" value="1" {% if t.is_active %}checked{% endif %}>
+              <label class="form-check-label fw-bold small text-dark" for="activeTour{{ t.id }}">
+                Is Active &amp; Display on Portal
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-modal-save">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endfor %}
+
+<!-- CREATE VIRTUAL TOUR MODAL -->
+<div class="modal fade" id="createTourModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_create_virtual_tour') }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-create">
+        <h5 class="modal-title fw-bold"><i class="fa fa-plus-circle me-2"></i>Add Virtual Tour</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Tour Title</label>
+            <input type="text" name="title" class="form-control" placeholder="e.g. IT Computer Laboratory 360 View" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="3" placeholder="Overview of the facility or presentation..." required></textarea>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Option A: Link or YouTube URL</label>
+            <input type="text" name="video_id" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
+            <small class="text-muted">Paste full YouTube link or 3D viewer link.</small>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Option B: Upload Video or Image File</label>
+            <input type="file" name="tour_file" class="form-control" accept="video/mp4,video/webm,image/*">
+            <small class="text-muted">Supports MP4, WebM, or JPG/PNG.</small>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-admin-green m-0">Save Tour</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer class="admin-canvas-footer mt-4">
+  <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
+  <div><a href="#">SchoolAdmin</a><a href="#">About Us</a></div>
+</footer>
+
+{% endblock %}

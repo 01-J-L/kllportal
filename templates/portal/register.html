@@ -1,0 +1,88 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<div class="login-wrapper py-5">
+  <div class="login-card" style="max-width: 440px;">
+    
+    <!-- Top Blue Wave Graphic -->
+    <div class="login-header-wave">
+      <svg viewBox="0 0 500 150" preserveAspectRatio="none">
+        <path d="M0.00,49.98 C150.00,140.00 349.80,-40.00 500.00,49.98 L500.00,150.00 L0.00,150.00 Z" fill="#ffffff"></path>
+      </svg>
+    </div>
+
+    <!-- Registration Form Body -->
+    <div class="login-body pt-2">
+      <h4 class="fw-bold mb-1 text-dark">Join Us</h4>
+      <p class="text-muted small mb-4">Create your official student portal account</p>
+
+      <form method="POST" action="{{ url_for('register') }}">
+        
+        <!-- Full Name -->
+        <label class="form-label">Full Name</label>
+        <div class="input-group-custom">
+          <input type="text" name="name" required placeholder="e.g. Juan Dela Cruz">
+        </div>
+
+        <!-- Email Address -->
+        <label class="form-label">Email Address</label>
+        <div class="input-group-custom">
+          <input type="email" name="email" required placeholder="student@mail.com">
+        </div>
+
+        <!-- Phone Number -->
+        <label class="form-label">Contact Number (Optional)</label>
+        <div class="input-group-custom">
+          <input type="text" name="phone_number" placeholder="09xxxxxxxxx">
+        </div>
+
+        <!-- Password -->
+        <label class="form-label">Create Password</label>
+        <div class="input-group-custom">
+          <input type="password" id="regPassword" name="password" required placeholder="At least 6 characters">
+          <button type="button" class="btn-toggle-pw" onclick="togglePw('regPassword', 'eyeIcon1')">
+            <i class="fa fa-eye" id="eyeIcon1"></i>
+          </button>
+        </div>
+
+        <!-- Confirm Password -->
+        <label class="form-label">Confirm Password</label>
+        <div class="input-group-custom">
+          <input type="password" id="regConfirmPassword" name="confirm_password" required placeholder="Re-enter password">
+          <button type="button" class="btn-toggle-pw" onclick="togglePw('regConfirmPassword', 'eyeIcon2')">
+            <i class="fa fa-eye" id="eyeIcon2"></i>
+          </button>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn-coral-signin mb-3">
+          Create Student Account
+        </button>
+
+        <div class="text-center small text-muted">
+          Already have an account? 
+          <a href="{{ url_for('login') }}" class="fw-bold text-decoration-none" style="color: #1e60d5;">Sign In here</a>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function togglePw(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  }
+</script>
+
+{% endblock %}

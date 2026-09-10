@@ -1,0 +1,105 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<!-- HERO BANNER WITH TORN PAPER BOTTOM & SEARCH BAR -->
+<div class="about-hero-wrapper" style="background: linear-gradient(rgba(30, 96, 213, 0.88), rgba(26, 84, 190, 0.92)), url('{{ url_for('static', filename='uploads/' + hero_image) if hero_image and not hero_image.startswith('http') else hero_image }}') center/cover no-repeat;">
+  <h1 class="about-hero-title">VIRTUAL TOUR</h1>
+
+  <div class="gallery-search-box">
+    <select class="search-dropdown">
+      <option value="ALL">ALL &#9662;</option>
+    </select>
+    <input type="text" id="tourSearchInput" class="search-input" placeholder="Search Keyword">
+    <button type="button" class="search-btn" onclick="filterTours()">Search</button>
+  </div>
+
+  <div class="torn-paper-edge"></div>
+</div>
+
+<div class="events-gallery-wrapper">
+  <div class="row g-4 justify-content-center" id="toursContainer">
+
+    {% if tours %}
+      {% for t in tours %}
+      <div class="col-lg-6 col-md-6 tour-item-col" data-title="{{ t.title }}">
+        <div class="card p-3 border shadow-sm h-100" style="border-radius: 8px;">
+          
+          <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm mb-3 bg-dark">
+            <!-- 1. Uploaded Local Video File -->
+            {% if t.file_url and (t.file_url.endswith('.mp4') or t.file_url.endswith('.webm')) %}
+              <video controls class="w-100 h-100" preload="metadata">
+                <source src="{{ url_for('static', filename='uploads/' + t.file_url) }}">
+                Your browser does not support the video tag.
+              </video>
+            
+            <!-- 2. Uploaded Panoramic Photo -->
+            {% elif t.file_url %}
+              <img src="{{ url_for('static', filename='uploads/' + t.file_url) }}" 
+                   alt="{{ t.title }}" 
+                   style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"
+                   onclick="window.open(this.src, '_blank')">
+
+            <!-- 3. Full Web URL Embed (Google Maps / 3D Virtual Tours) -->
+            {% elif t.video_id and ('http://' in t.video_id or 'https://' in t.video_id) %}
+              <iframe 
+                src="{{ t.video_id }}" 
+                title="{{ t.title }}" 
+                allowfullscreen 
+                loading="lazy">
+              </iframe>
+
+            <!-- 4. Standard YouTube Video ID -->
+            {% elif t.video_id %}
+              <iframe 
+                src="https://www.youtube.com/embed/{{ t.video_id }}" 
+                title="{{ t.title }}" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+              </iframe>
+            {% endif %}
+          </div>
+
+          <div class="card-body p-1">
+            <h5 class="fw-bold text-dark mb-1">{{ t.title }}</h5>
+            <p class="small text-muted mb-0" style="white-space: pre-line;">{{ t.description }}</p>
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12 text-center py-5 bg-white rounded shadow-sm">
+        <i class="fa fa-film fa-3x text-muted mb-3"></i>
+        <h5 class="text-dark fw-bold">No virtual tours available yet.</h5>
+        <p class="text-muted mb-0">Virtual tour presentations will appear here once published.</p>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Floating Back-to-Top Blue Button -->
+<a href="#" class="btn-floating-top" title="Back to Top">
+  <i class="fa fa-angle-double-up"></i>
+</a>
+
+<!-- Live Client-side Filter Script -->
+<script>
+  function filterTours() {
+    const term = document.getElementById('tourSearchInput').value.toLowerCase().trim();
+    const items = document.querySelectorAll('.tour-item-col');
+
+    items.forEach(item => {
+      const title = item.getAttribute('data-title').toLowerCase();
+      if (title.includes(term)) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  document.getElementById('tourSearchInput').addEventListener('keyup', filterTours);
+</script>
+
+{% endblock %}

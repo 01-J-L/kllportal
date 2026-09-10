@@ -1,0 +1,67 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="login-wrapper">
+  <div class="login-card">
+
+    <!-- Exact Wave Header Graphic from Screenshot -->
+    <div class="login-header-wave">
+      <svg viewBox="0 0 500 150" preserveAspectRatio="none">
+        <!-- Smooth organic curve transition -->
+        <path d="M0.00,49.98 C150.00,140.00 349.80,-40.00 500.00,49.98 L500.00,150.00 L0.00,150.00 Z" fill="#ffffff">
+        </path>
+      </svg>
+    </div>
+
+    <!-- Login Form Body -->
+    <div class="login-body">
+      <h4>Login Form</h4>
+
+      <form method="POST" action="{{ url_for('login') }}">
+        <!-- Email Input -->
+        <label class="form-label">Email address</label>
+        <div class="input-group-custom">
+          <input type="email" name="email" required placeholder="Enter your email">
+        </div>
+
+        <!-- Password Input with Eye Toggle -->
+        <label class="form-label">Password</label>
+        <div class="input-group-custom">
+          <input type="password" id="loginPassword" name="password" required
+            placeholder="Enter your password">
+          <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility()">
+            <i class="fa fa-eye" id="eyeIcon"></i>
+          </button>
+        </div>
+
+        <!-- Coral "Sign In" Button -->
+        <button type="submit" class="btn-coral-signin">Sign In</button>
+
+        <!-- Coral "Forgot your password?" Link -->
+        <a href="{{ url_for('forgot_password') }}" class="forgot-password-link">Forgot your password?</a>
+        <div class="text-center mt-3 pt-3 border-top small text-muted">
+          Don't have an account yet?
+          <a href="{{ url_for('register') }}" class="fw-bold text-decoration-none" style="color: #1e60d5;">Join Us &amp;
+            Register</a>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function togglePasswordVisibility() {
+    const pwInput = document.getElementById('loginPassword');
+    const eyeIcon = document.getElementById('eyeIcon');
+    if (pwInput.type === 'password') {
+      pwInput.type = 'text';
+      eyeIcon.classList.remove('fa-eye');
+      eyeIcon.classList.add('fa-eye-slash');
+    } else {
+      pwInput.type = 'password';
+      eyeIcon.classList.remove('fa-eye-slash');
+      eyeIcon.classList.add('fa-eye');
+    }
+  }
+</script>
+{% endblock %}

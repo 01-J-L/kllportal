@@ -1,0 +1,191 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+
+
+<!-- MAIN WHITE CARD -->
+<div class="admin-panel-card">
+
+  <h2 class="admin-panel-title">Student Handbook Management</h2>
+
+  <button type="button" class="btn-admin-green mb-3" data-bs-toggle="modal" data-bs-target="#createHandbookModal">
+    UPLOAD NEW HANDBOOK PDF
+  </button>
+
+  <div class="table-responsive">
+    <table class="admin-data-table">
+      <thead>
+        <tr>
+          <th>FILE</th>
+          <th>TITLE</th>
+          <th>DESCRIPTION</th>
+          <th>FILE SIZE</th>
+          <th class="text-center">IS ACTIVE</th>
+          <th class="text-center">ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hb in handbooks %}
+        <tr>
+          <td>
+            <a href="{{ url_for('static', filename='uploads/' + hb.file_url) }}" target="_blank" class="text-danger fs-4 text-decoration-none" title="View Document">
+              <i class="fa fa-file-pdf"></i>
+            </a>
+          </td>
+          <td class="fw-bold">{{ hb.title }}</td>
+          <td class="text-muted" style="max-width: 280px;">{{ hb.description or 'Official Student Policy Document' }}</td>
+          <td><span class="badge bg-light text-dark border">{{ hb.file_size|safe }}</span></td>
+          <td class="text-center">
+            <span class="badge {{ 'bg-success' if hb.is_active else 'bg-secondary' }}">
+              {{ 'Active' if hb.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="text-center" style="white-space: nowrap;">
+            <button type="button" class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showHandbookModal{{ hb.id }}">
+              SHOW
+            </button>
+            <button type="button" class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editHandbookModal{{ hb.id }}">
+              EDIT
+            </button>
+            <form action="{{ url_for('admin_delete_handbook', id=hb.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete {{ hb.title }}?');">
+              <button class="btn-tbl-delete" type="submit">
+                DELETE
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- MODALS PLACED OUTSIDE THE TABLE (NO CLICK-THROUGH BUGS)   -->
+<!-- ========================================================= -->
+
+{% for hb in handbooks %}
+
+<!-- SHOW HANDBOOK MODAL -->
+<div class="modal fade" id="showHandbookModal{{ hb.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-header-view">
+        <h5 class="modal-title fw-bold"><i class="fa fa-file-pdf me-2"></i>{{ hb.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="text-center p-3 bg-light rounded border mb-3">
+          <i class="fa fa-file-pdf fa-4x text-danger mb-2"></i>
+          <h6 class="fw-bold text-dark mb-1">{{ hb.file_url }}</h6>
+          <small class="text-muted">{{ hb.file_size|safe }}</small>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">DOCUMENT TITLE</label>
+          <div class="p-2 bg-light rounded border fw-bold">{{ hb.title }}</div>
+        </div>
+        {% if hb.description %}
+        <div class="mb-3">
+          <label class="form-label">SUMMARY / DESCRIPTION</label>
+          <div class="p-3 bg-light rounded border" style="white-space: pre-line;">{{ hb.description }}</div>
+        </div>
+        {% endif %}
+        <div>
+          <a href="{{ url_for('static', filename='uploads/' + hb.file_url) }}" target="_blank" class="btn btn-outline-primary btn-sm w-100 fw-bold">
+            <i class="fa fa-external-link-alt me-1"></i> Open / Download PDF in New Tab
+          </a>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT HANDBOOK MODAL -->
+<div class="modal fade" id="editHandbookModal{{ hb.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_edit_handbook', id=hb.id) }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-edit">
+        <h5 class="modal-title fw-bold"><i class="fa fa-pen me-2"></i>Edit Handbook: {{ hb.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Document Title</label>
+            <input type="text" name="title" class="form-control" value="{{ hb.title }}" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Summary / Description (Optional)</label>
+            <textarea name="description" class="form-control" rows="3">{{ hb.description or '' }}</textarea>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Replace PDF File (Optional)</label>
+            <input type="file" name="pdf_file" class="form-control" accept="application/pdf">
+            <small class="text-muted d-block mt-1">Current file: <strong>{{ hb.file_url }}</strong> ({{ hb.file_size|safe }})</small>
+          </div>
+
+          <div class="col-12">
+            <div class="form-check form-switch mt-2">
+              <input class="form-check-input" type="checkbox" name="is_active" id="activeHb{{ hb.id }}" value="1" {% if hb.is_active %}checked{% endif %}>
+              <label class="form-check-label fw-bold small text-dark" for="activeHb{{ hb.id }}">
+                Is Active &amp; Display on Student Portal
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-modal-save">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endfor %}
+
+<!-- CREATE NEW HANDBOOK MODAL -->
+<div class="modal fade" id="createHandbookModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_create_handbook') }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-create">
+        <h5 class="modal-title fw-bold"><i class="fa fa-plus-circle me-2"></i>Upload Handbook PDF</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Handbook Title</label>
+            <input type="text" name="title" class="form-control" placeholder="e.g. Code of Student Conduct & Discipline" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Summary / Description (Optional)</label>
+            <textarea name="description" class="form-control" rows="3" placeholder="Brief summary of policies covered..."></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Select PDF Document</label>
+            <input type="file" name="pdf_file" class="form-control" accept="application/pdf" required>
+            <small class="text-muted">Must be a PDF file up to 16 MB.</small>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-admin-green m-0">Upload Document</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer class="admin-canvas-footer mt-4">
+  <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
+  <div><a href="#">SchoolAdmin</a><a href="#">About Us</a></div>
+</footer>
+
+{% endblock %}

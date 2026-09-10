@@ -1,0 +1,152 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<!-- HERO SECTION: SCHOOL WELCOME WITH TORN PAPER BOTTOM -->
+<div class="about-hero-wrapper" style="background: linear-gradient(rgba(30, 96, 213, 0.88), rgba(26, 84, 190, 0.92)), url('{{ url_for('static', filename='uploads/' + hero_image) if hero_image and not hero_image.startswith('http') else hero_image }}') center/cover no-repeat;">
+  <h1 class="about-hero-title">{{ hero_title }}</h1>
+  <p style="font-size: 1.1rem; max-width: 700px; margin: 15px auto 0; opacity: 0.95; white-space: pre-line;">
+    {{ hero_subtitle }}
+  </p>
+  <div class="torn-paper-edge"></div>
+</div>
+
+<!-- ================= 1. DYNAMIC ABOUT STATEMENTS (Vision, Mission, Goals, etc.) ================= -->
+<section class="about-section-container" style="max-width: 1100px; margin: 50px auto 30px auto; padding: 0 20px;">
+  <div class="text-center mb-4">
+    <div class="sub-header-red">INSTITUTIONAL CORE</div>
+    <h2 style="font-weight: 900; font-size: 2rem; color: var(--text-dark);">Guiding Principles</h2>
+  </div>
+
+  {% if about_sections %}
+    <div class="row g-4 justify-content-center">
+      {% for sec in about_sections %}
+      <div class="col-md-{{ 6 if about_sections|length <= 2 else 4 }} col-sm-12">
+        <div class="about-block p-4 bg-white rounded shadow-sm border h-100">
+          <h3 class="fw-bold text-uppercase" style="font-size: 1.25rem; color: #1e60d5;">{{ sec.title }}</h3>
+          <p class="text-muted mb-0" style="white-space: pre-line; line-height: 1.7; font-size: 0.92rem;">
+            {{ sec.body }}
+          </p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-4 text-muted">
+      <p>Institutional statements will appear here once published by the administration.</p>
+    </div>
+  {% endif %}
+</section>
+
+<!-- ================= 2. OUR COURSES & PROGRAMS (FIRST 3 CARDS ONLY) ================= -->
+<section style="max-width: 1150px; margin: 40px auto 70px auto; padding: 0 20px;">
+  <div class="text-center mb-4">
+    <div class="sub-header-red">ACADEMIC OFFERINGS</div>
+    <h2 style="font-weight: 900; font-size: 2rem; color: var(--text-dark);">Our Courses &amp; Programs</h2>
+    <p class="text-muted small">Explore our degree curricula and career-focused programs</p>
+  </div>
+
+  {% if courses %}
+    <div class="row g-4 justify-content-center">
+      {% for course in courses[:3] %}
+      <div class="col-lg-4 col-md-6">
+        <div class="card h-100 border rounded shadow-sm p-3 bg-white d-flex flex-column justify-content-between" style="border-radius: 10px;">
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-primary px-2 py-1 fw-bold" style="background-color: #1e60d5 !important;">
+                {{ course.course_code }}
+              </span>
+              <span class="small text-muted fw-bold">
+                {{ course.credits }} Credits
+              </span>
+            </div>
+            
+            <h5 class="fw-bold text-dark mb-2" style="font-size: 1.05rem;">{{ course.course_name }}</h5>
+            
+            <p class="text-muted small mb-3" style="line-height: 1.6;">
+              {{ (course.description[:130] + '...') if course.description|length > 130 else course.description }}
+            </p>
+          </div>
+
+          <div class="pt-2 border-top">
+            <a href="{{ url_for('courses') }}" class="small fw-bold text-decoration-none" style="color: #1e60d5;">
+              View Curriculum &amp; Outcomes <i class="fa fa-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="{{ url_for('courses') }}" class="btn btn-primary px-4 py-2"
+         style="background-color: #1e60d5; border: none; font-weight: 600; border-radius: 6px;">
+        View All Courses &amp; Programs <i class="fa fa-arrow-right ms-1"></i>
+      </a>
+    </div>
+  {% else %}
+    <div class="text-center py-4 bg-white rounded shadow-sm">
+      <p class="text-muted mb-0">Academic offerings will appear here once added in the admin portal.</p>
+    </div>
+  {% endif %}
+</section>
+
+<!-- ================= 3. LATEST NEWS & ANNOUNCEMENTS (FIRST 3 CARDS ONLY) ================= -->
+<section style="max-width: 1150px; margin: 0 auto 70px auto; padding: 0 20px;">
+  <div class="text-center mb-4">
+    <div class="sub-header-red">STAY INFORMED</div>
+    <h2 style="font-weight: 900; font-size: 2rem; color: var(--text-dark);">Latest News &amp; Announcements</h2>
+  </div>
+
+  {% if news %}
+    <div class="row g-4 justify-content-center">
+      {% for item in news[:3] %}
+      <div class="col-lg-4 col-md-6">
+        <div class="generic-news-card h-100 d-flex flex-column justify-content-between mb-0">
+          <div>
+            {% if item.image_url %}
+            <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}"
+                 alt="{{ item.title }}"
+                 style="height: 200px; width: 100%; object-fit: cover;"
+                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=400&q=80';">
+            {% endif %}
+            <div class="generic-news-body">
+              <h5 class="generic-news-title" style="font-size: 1.1rem;">{{ item.title }}</h5>
+              <p class="generic-news-meta mb-2">
+                <i class="fa fa-user me-1 text-primary"></i> {{ item.author_name or 'Admin' }} &bull;
+                {{ item.created_at.strftime('%b %d, %Y') if item.created_at else 'Recent' }}
+              </p>
+              <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.6;">
+                {{ item.content[:110] }}{% if item.content|length > 110 %}...{% endif %}
+              </p>
+            </div>
+          </div>
+
+          <div class="px-3 pb-3">
+            <a href="{{ url_for('news') }}" class="small fw-bold text-decoration-none" style="color: #1e60d5;">
+              Read Full Bulletin <i class="fa fa-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="{{ url_for('news') }}" class="btn btn-outline-primary px-4 py-2"
+         style="font-weight: 600; border-radius: 6px;">
+        View All News <i class="fa fa-arrow-right ms-1"></i>
+      </a>
+    </div>
+  {% else %}
+    <div class="text-center py-4 bg-white rounded shadow-sm">
+      <p class="text-muted mb-0">No news announcements posted yet.</p>
+    </div>
+  {% endif %}
+</section>
+
+<!-- Floating Back-to-Top Blue Button -->
+<a href="#" class="btn-floating-top" title="Back to Top">
+  <i class="fa fa-angle-double-up"></i>
+</a>
+
+{% endblock %}

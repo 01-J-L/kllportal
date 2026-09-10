@@ -1,0 +1,272 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+
+
+<!-- MAIN WHITE CARD -->
+<div class="admin-panel-card">
+
+  <h2 class="admin-panel-title">News Management</h2>
+
+  <button type="button" class="btn-admin-green mb-3" data-bs-toggle="modal" data-bs-target="#createNewsModal">
+    CREATE NEWS BULLETIN
+  </button>
+
+  <div class="table-responsive">
+    <table class="admin-data-table">
+      <thead>
+        <tr>
+          <th>IMAGE</th>
+          <th>TITLE</th>
+          <th>AUTHOR</th>
+          <th>CONTENT</th>
+          <th>NEWS LINK</th>
+          <th class="text-center">IS ACTIVE</th>
+          <th class="text-center">ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in news %}
+        <tr>
+          <td>
+            {% if item.image_url %}
+            <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}"
+                 alt="{{ item.title }}"
+                 style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px;"
+                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=100&q=80';">
+            {% else %}
+            <div class="bg-light border text-muted d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 4px; font-size: 0.65rem;">
+              No Img
+            </div>
+            {% endif %}
+          </td>
+          <td class="fw-bold">{{ item.title }}</td>
+          <td>{{ item.author_name or 'Admin' }}</td>
+          <td class="text-muted" style="max-width: 240px;">
+            {{ item.content[:50] }}{% if item.content|length > 50 %}...{% endif %}
+          </td>
+          <td>
+            {% if item.link_url %}
+              <a href="{{ item.link_url }}" target="_blank" class="badge bg-primary text-decoration-none">
+                <i class="fa fa-external-link-alt me-1"></i> Visit Link
+              </a>
+            {% else %}
+              <span class="text-muted small">None</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <span class="badge {{ 'bg-success' if item.is_active else 'bg-secondary' }}">
+              {{ 'Active' if item.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="text-center" style="white-space: nowrap;">
+            <button type="button" class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showNewsModal{{ item.id }}">
+              SHOW
+            </button>
+            <button type="button" class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editNewsModal{{ item.id }}">
+              EDIT
+            </button>
+            <form action="{{ url_for('admin_delete_news', id=item.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete this news bulletin?');">
+              <button class="btn-tbl-delete" type="submit">
+                DELETE
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- MODALS PLACED OUTSIDE TABLE (PREVENTS STACKING/FREEZING)  -->
+<!-- ========================================================= -->
+
+{% for item in news %}
+
+<!-- SHOW NEWS MODAL -->
+<div class="modal fade" id="showNewsModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-header-view">
+        <h5 class="modal-title fw-bold"><i class="fa fa-newspaper me-2"></i>{{ item.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        {% if item.image_url %}
+        <div class="text-center mb-3">
+          <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}"
+               alt="{{ item.title }}"
+               class="img-fluid rounded border shadow-sm"
+               style="max-height: 280px;">
+        </div>
+        {% endif %}
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">AUTHOR</label>
+            <div class="p-2 bg-light rounded border fw-bold">{{ item.author_name or 'Admin' }}</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">STATUS</label>
+            <div class="p-2 bg-light rounded border">
+              <span class="badge {{ 'bg-success' if item.is_active else 'bg-secondary' }}">
+                {{ 'Active' if item.is_active else 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">ARTICLE CONTENT</label>
+          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.7;">{{ item.content }}</div>
+        </div>
+        <div>
+          <label class="form-label">OFFICIAL LINK</label>
+          <div class="p-2 bg-light rounded border">
+            {% if item.link_url %}
+              <a href="{{ item.link_url }}" target="_blank" class="fw-bold text-primary text-decoration-none">
+                <i class="fa fa-link me-1"></i> {{ item.link_url }}
+              </a>
+            {% else %}
+              <span class="text-muted">No external link provided.</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT NEWS MODAL -->
+<div class="modal fade" id="editNewsModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_edit_news', id=item.id) }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-edit">
+        <h5 class="modal-title fw-bold"><i class="fa fa-pen me-2"></i>Edit News: {{ item.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">Headline / Title</label>
+            <input type="text" name="title" class="form-control" value="{{ item.title }}" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Author Name</label>
+            <input type="text" name="author_name" class="form-control" value="{{ item.author_name or 'Admin' }}">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Article Content</label>
+            <textarea name="content" class="form-control" rows="5" required>{{ item.content }}</textarea>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Official / External Link (Leave blank to remove)</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="fa fa-link text-muted"></i></span>
+              <input type="url" name="link_url" class="form-control" value="{{ item.link_url or '' }}" placeholder="https://example.com/announcement">
+            </div>
+          </div>
+
+          <div class="col-md-8">
+            <label class="form-label">Replace News Image (Optional)</label>
+            <input type="file" name="image" class="form-control" accept="image/*" onchange="previewNewsImg(this, 'prevNews{{ item.id }}')">
+            {% if item.image_url %}
+            <small class="text-muted d-block mt-1">Current: {{ item.image_url }}</small>
+            {% endif %}
+          </div>
+
+          <div class="col-md-4 text-center">
+            <label class="form-label d-block">Preview</label>
+            <img id="prevNews{{ item.id }}"
+                 src="{{ url_for('static', filename='uploads/' + item.image_url) if item.image_url else 'https://via.placeholder.com/150' }}"
+                 class="modal-thumbnail-preview"
+                 alt="Preview">
+          </div>
+
+          <div class="col-12">
+            <div class="form-check form-switch mt-2">
+              <input class="form-check-input" type="checkbox" name="is_active" id="activeNews{{ item.id }}" value="1" {% if item.is_active %}checked{% endif %}>
+              <label class="form-check-label fw-bold small text-dark" for="activeNews{{ item.id }}">
+                Is Active &amp; Published on Portal
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-modal-save">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endfor %}
+
+<!-- CREATE NEWS MODAL -->
+<div class="modal fade" id="createNewsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_create_news') }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-create">
+        <h5 class="modal-title fw-bold"><i class="fa fa-plus-circle me-2"></i>Publish News Bulletin</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">Headline / Title</label>
+            <input type="text" name="title" class="form-control" placeholder="e.g. Enrollment Period Extended" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Author Name</label>
+            <input type="text" name="author_name" class="form-control" placeholder="e.g. Office of the Registrar" value="{{ session.get('user_name', 'Admin') }}">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Article Content</label>
+            <textarea name="content" class="form-control" rows="5" placeholder="Enter complete bulletin details..." required></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Official Link (Optional)</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="fa fa-link text-muted"></i></span>
+              <input type="url" name="link_url" class="form-control" placeholder="https://example.com/announcement">
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Featured Image (Optional)</label>
+            <input type="file" name="image" class="form-control" accept="image/*">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-admin-green m-0">Publish News</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer class="admin-canvas-footer mt-4">
+  <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
+  <div><a href="#">SchoolAdmin</a><a href="#">About Us</a></div>
+</footer>
+
+<script>
+function previewNewsImg(input, targetId) {
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById(targetId).src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+
+{% endblock %}

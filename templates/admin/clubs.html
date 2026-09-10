@@ -1,0 +1,261 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+
+
+<!-- MAIN WHITE CARD -->
+<div class="admin-panel-card">
+
+  <h2 class="admin-panel-title">Clubs Management</h2>
+
+  <button type="button" class="btn-admin-green mb-3" data-bs-toggle="modal" data-bs-target="#createClubModal">
+    CREATE NEW CLUB
+  </button>
+
+  <div class="table-responsive">
+    <table class="admin-data-table">
+      <thead>
+        <tr>
+          <th>IMAGE</th>
+          <th>NAME</th>
+          <th>DETAILS</th>
+          <th>CLUB LINK</th>
+          <th class="text-center">IS ACTIVE</th>
+          <th class="text-center">ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for club in clubs %}
+        <tr>
+          <td>
+            {% if club.image_url %}
+            <img src="{{ url_for('static', filename='uploads/' + club.image_url) }}"
+                 alt="{{ club.name }}"
+                 style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px;"
+                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=100&q=80';">
+            {% else %}
+            <div class="bg-light border text-muted d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 4px; font-size: 0.65rem;">
+              No Img
+            </div>
+            {% endif %}
+          </td>
+          <td class="fw-bold">{{ club.name }}</td>
+          <td class="text-muted" style="max-width: 250px;">{{ club.details[:50] }}{% if club.details|length > 50 %}...{% endif %}</td>
+          <td>
+            {% if club.link_url %}
+              <a href="{{ club.link_url }}" target="_blank" class="badge bg-primary text-decoration-none">
+                <i class="fa fa-external-link-alt me-1"></i> Visit Link
+              </a>
+            {% else %}
+              <span class="text-muted small">None</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <span class="badge {{ 'bg-success' if club.is_active else 'bg-secondary' }}">
+              {{ 'Active' if club.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="text-center" style="white-space: nowrap;">
+            <button type="button" class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showClubModal{{ club.id }}">
+              SHOW
+            </button>
+            <button type="button" class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editClubModal{{ club.id }}">
+              EDIT
+            </button>
+            <form action="{{ url_for('admin_delete_club', id=club.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete {{ club.name }}?');">
+              <button class="btn-tbl-delete" type="submit">
+                DELETE
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- MODALS PLACED OUTSIDE THE TABLE (PREVENTS FREEZING BUGS)  -->
+<!-- ========================================================= -->
+
+{% for club in clubs %}
+
+<!-- ================= SHOW CLUB MODAL ================= -->
+<div class="modal fade" id="showClubModal{{ club.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-header-view">
+        <h5 class="modal-title fw-bold"><i class="fa fa-users me-2"></i>{{ club.name }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        {% if club.image_url %}
+        <div class="text-center mb-3">
+          <img src="{{ url_for('static', filename='uploads/' + club.image_url) }}"
+               alt="{{ club.name }}"
+               class="img-fluid rounded border shadow-sm"
+               style="max-height: 200px;">
+        </div>
+        {% endif %}
+        <div class="mb-3">
+          <label class="form-label">CLUB DETAILS &amp; ANNOUNCEMENTS</label>
+          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.6;">{{ club.details }}</div>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">EXTERNAL / REGISTRATION LINK</label>
+            <div class="p-2 bg-light rounded border">
+              {% if club.link_url %}
+                <a href="{{ club.link_url }}" target="_blank" class="fw-bold text-primary text-decoration-none">
+                  <i class="fa fa-link me-1"></i> {{ club.link_url }}
+                </a>
+              {% else %}
+                <span class="text-muted">No external link provided.</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">STATUS</label>
+            <div class="p-2 bg-light rounded border">
+              <span class="badge {{ 'bg-success' if club.is_active else 'bg-secondary' }}">
+                {{ 'Active' if club.is_active else 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= EDIT CLUB MODAL ================= -->
+<div class="modal fade" id="editClubModal{{ club.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_edit_club', id=club.id) }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-edit">
+        <h5 class="modal-title fw-bold"><i class="fa fa-pen me-2"></i>Edit Club: {{ club.name }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Club Name</label>
+            <input type="text" name="name" class="form-control" value="{{ club.name }}" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Club Details &amp; Meeting Schedules</label>
+            <textarea name="details" class="form-control" rows="4" required>{{ club.details }}</textarea>
+          </div>
+
+          <!-- EDIT / ADD / REMOVE LINK INPUT -->
+          <div class="col-12">
+            <label class="form-label">Club Official Link (Leave blank to remove link)</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="fa fa-link text-muted"></i></span>
+              <input type="url" name="link_url" class="form-control" value="{{ club.link_url or '' }}" placeholder="https://facebook.com/kll.yourclub">
+            </div>
+            <small class="text-muted">Enter full URL starting with https:// or http://</small>
+          </div>
+
+          <div class="col-md-8">
+            <label class="form-label">Replace Logo / Image (Optional)</label>
+            <input type="file" name="image" class="form-control" accept="image/*" onchange="previewClubImage(this, 'prevClub{{ club.id }}')">
+            {% if club.image_url %}
+            <small class="text-muted d-block mt-1">Current file: {{ club.image_url }}</small>
+            {% endif %}
+          </div>
+
+          <div class="col-md-4 text-center">
+            <label class="form-label d-block">Preview</label>
+            <img id="prevClub{{ club.id }}"
+                 src="{{ url_for('static', filename='uploads/' + club.image_url) if club.image_url else 'https://via.placeholder.com/150' }}"
+                 class="modal-thumbnail-preview"
+                 alt="Preview">
+          </div>
+
+          <div class="col-12">
+            <div class="form-check form-switch mt-2">
+              <input class="form-check-input" type="checkbox" name="is_active" id="activeClub{{ club.id }}" value="1" {% if club.is_active %}checked{% endif %}>
+              <label class="form-check-label fw-bold small text-dark" for="activeClub{{ club.id }}">
+                Is Active &amp; Display on Portal
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-modal-save">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endfor %}
+
+<!-- ================= CREATE NEW CLUB MODAL ================= -->
+<div class="modal fade" id="createClubModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_create_club') }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-create">
+        <h5 class="modal-title fw-bold"><i class="fa fa-plus-circle me-2"></i>Register New Club</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Club Name</label>
+            <input type="text" name="name" class="form-control" placeholder="e.g. The CPU (Computer Professional Union)" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Club Details / Announcements</label>
+            <textarea name="details" class="form-control" rows="4" placeholder="Enter meeting schedules and mission..." required></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Club Official Link (Optional)</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="fa fa-link text-muted"></i></span>
+              <input type="url" name="link_url" class="form-control" placeholder="https://facebook.com/kll.yourclub">
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Club Image / Logo (Optional)</label>
+            <input type="file" name="image" class="form-control" accept="image/*">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-admin-green m-0">Save Club</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer class="admin-canvas-footer mt-4">
+  <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
+  <div>
+    <a href="#">SchoolAdmin</a>
+    <a href="#">About Us</a>
+  </div>
+</footer>
+
+<script>
+function previewClubImage(input, targetId) {
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById(targetId).src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+
+{% endblock %}

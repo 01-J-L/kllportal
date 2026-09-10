@@ -1,0 +1,147 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<!-- HERO BANNER WITH TORN PAPER BOTTOM & SEARCH BAR -->
+<div class="about-hero-wrapper" style="background: linear-gradient(rgba(30, 96, 213, 0.88), rgba(26, 84, 190, 0.92)), url('{{ url_for('static', filename='uploads/' + hero_image) if hero_image and not hero_image.startswith('http') else hero_image }}') center/cover no-repeat;">
+  <h1 class="about-hero-title">NEWS</h1>
+
+  <div class="gallery-search-box">
+    <select class="search-dropdown">
+      <option value="ALL">ALL &#9662;</option>
+    </select>
+    <input type="text" id="newsSearchInput" class="search-input" placeholder="Search Keyword">
+    <button type="button" class="search-btn" onclick="filterNews()">Search</button>
+  </div>
+
+  <div class="torn-paper-edge"></div>
+</div>
+
+<div class="news-page-wrapper">
+  
+  <div id="dynamicNewsContainer">
+    {% if news %}
+      {% for item in news %}
+      <div class="generic-news-card news-search-item" data-title="{{ item.title }}">
+        
+        <!-- CLICKABLE IMAGE: Opens Pop-out Modal with Definition -->
+        {% if item.image_url %}
+        <div class="position-relative news-img-trigger" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#newsPopout{{ item.id }}" title="Click to view full image and definition">
+          <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}" 
+               alt="{{ item.title }}"
+               onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80';">
+          <span class="badge bg-dark bg-opacity-75 position-absolute bottom-0 end-0 m-3 px-3 py-2 fs-7">
+            <i class="fa fa-search-plus me-1"></i> Click to Enlarge
+          </span>
+        </div>
+        {% endif %}
+
+        <div class="generic-news-body">
+          <h3 class="generic-news-title">{{ item.title }}</h3>
+          <div class="generic-news-meta">
+            <i class="fa fa-user me-1 text-primary"></i> By {{ item.author_name or 'Admin' }} &bull; 
+            <i class="fa fa-calendar-alt ms-2 me-1 text-primary"></i> {{ item.created_at.strftime('%B %d, %Y') if item.created_at else 'Recent' }}
+          </div>
+          
+          <p class="text-muted mb-3" style="line-height: 1.7; white-space: pre-line;">{{ item.content }}</p>
+
+          <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+            {% if item.image_url %}
+            <!-- POP-OUT BUTTON -->
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newsPopout{{ item.id }}">
+              <i class="fa fa-expand me-1"></i> View Full Image &amp; Details
+            </button>
+            {% endif %}
+
+            <!-- EXTERNAL LINK BUTTON -->
+            {% if item.link_url %}
+            <a href="{{ item.link_url }}" target="_blank" class="btn btn-sm btn-primary" style="background-color: #1e60d5;">
+              <i class="fa fa-external-link-alt me-1"></i> Read More / Official Link
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= NEWS IMAGE & DEFINITION POPOUT MODAL ================= -->
+      <div class="modal fade" id="newsPopout{{ item.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #1e60d5, #15459b);">
+              <h5 class="modal-title fw-bold"><i class="fa fa-newspaper me-2"></i>{{ item.title }}</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+              {% if item.image_url %}
+              <div class="text-center bg-dark p-2">
+                <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}" 
+                     alt="{{ item.title }}" 
+                     class="img-fluid rounded" 
+                     style="max-height: 500px; width: 100%; object-fit: contain;">
+              </div>
+              {% endif %}
+              
+              <div class="p-4">
+                <div class="text-muted small mb-2">
+                  <i class="fa fa-user me-1 text-primary"></i> <strong>{{ item.author_name or 'Admin' }}</strong> &bull; 
+                  <i class="fa fa-calendar-alt ms-2 me-1 text-primary"></i> {{ item.created_at.strftime('%B %d, %Y') if item.created_at else 'Recent' }}
+                </div>
+                
+                <h6 class="fw-bold text-dark mb-2">ARTICLE DEFINITION &amp; DETAILS</h6>
+                <p class="text-secondary mb-0" style="line-height: 1.8; white-space: pre-line; font-size: 0.95rem;">
+                  {{ item.content }}
+                </p>
+
+                {% if item.link_url %}
+                <div class="mt-4 pt-3 border-top">
+                  <a href="{{ item.link_url }}" target="_blank" class="btn btn-primary btn-sm px-3 fw-bold" style="background-color: #1e60d5;">
+                    <i class="fa fa-external-link-alt me-1"></i> Open External Link
+                  </a>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="modal-footer bg-light">
+              <button type="button" class="btn btn-secondary px-4 btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% endfor %}
+    {% else %}
+      <div class="text-center py-5 bg-white rounded shadow-sm">
+        <i class="fa fa-newspaper fa-3x text-muted mb-3"></i>
+        <h5 class="text-dark fw-bold">No news bulletins published yet.</h5>
+        <p class="text-muted mb-0">Announcements will appear here once published by the administration.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Floating Back-to-Top Blue Button -->
+<a href="#" class="btn-floating-top" title="Back to Top">
+  <i class="fa fa-angle-double-up"></i>
+</a>
+
+<!-- Live Client-side Filter Script -->
+<script>
+  function filterNews() {
+    const term = document.getElementById('newsSearchInput').value.toLowerCase().trim();
+    const items = document.querySelectorAll('.news-search-item');
+
+    items.forEach(item => {
+      const title = item.getAttribute('data-title').toLowerCase();
+      if (title.includes(term)) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  document.getElementById('newsSearchInput').addEventListener('keyup', filterNews);
+</script>
+
+{% endblock %}

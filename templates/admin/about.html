@@ -1,0 +1,311 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+
+
+<!-- ================= 1. ADMISSION FORM DOCUMENT MANAGER ================= -->
+<div class="admin-panel-card mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+      <h3 class="admin-panel-title mb-1" style="font-size: 1.35rem;">Admission Form Document</h3>
+      <p class="text-muted small mb-0">Manage the file linked to <em>"Click here to download the admission form"</em> on the About page.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn-tbl-edit text-white" data-bs-toggle="modal" data-bs-target="#editAdmissionFileModal">
+        <i class="fa fa-file-upload me-1"></i> {% if admission_file %}REPLACE FILE{% else %}UPLOAD FILE{% endif %}
+      </button>
+      {% if admission_file %}
+      <form action="{{ url_for('admin_delete_admission_file') }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently remove this admission document?');">
+        <button type="submit" class="btn-tbl-delete text-white">
+          <i class="fa fa-trash me-1"></i> DELETE FILE
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="p-3 bg-light rounded border">
+    {% if admission_file %}
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-3">
+          <i class="fa fa-file-pdf fa-2x text-danger"></i>
+          <div>
+            <div class="fw-bold text-dark">{{ admission_file }}</div>
+            <small class="text-success"><i class="fa fa-check-circle me-1"></i>Active &amp; Available for Download</small>
+          </div>
+        </div>
+        <a href="{{ url_for('static', filename='uploads/' + admission_file) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-semibold">
+          <i class="fa fa-external-link-alt me-1"></i> View / Download Current File
+        </a>
+      </div>
+    {% else %}
+      <div class="text-muted text-center py-3">
+        <i class="fa fa-file-excel fa-2x mb-2 text-secondary"></i>
+        <p class="mb-0 small">No admission file uploaded yet. Click <strong>"UPLOAD FILE"</strong> to add a PDF document.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ================= 2. SCHOOL ORGANIZATIONAL CHART ================= -->
+<div class="admin-panel-card mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="admin-panel-title mb-1" style="font-size: 1.35rem;">School Organizational Chart</h3>
+      <p class="text-muted small mb-0">Upload a single high-resolution image poster of the organizational chart.</p>
+    </div>
+    <button type="button" class="btn-tbl-edit text-white" data-bs-toggle="modal" data-bs-target="#editOrgChartModal">
+      <i class="fa fa-image me-1"></i> UPDATE CHART PICTURE
+    </button>
+  </div>
+
+  <div class="p-3 bg-light rounded border text-center">
+    {% if org_chart_image %}
+      <img src="{{ url_for('static', filename='uploads/' + org_chart_image) }}" 
+           alt="School Organizational Chart" 
+           class="img-fluid rounded shadow-sm" 
+           style="max-height: 380px; width: auto; object-fit: contain;">
+      <div class="small text-muted mt-2">Current file: <strong>{{ org_chart_image }}</strong></div>
+    {% else %}
+      <div class="py-4 text-muted">
+        <i class="fa fa-sitemap fa-3x mb-2 text-secondary"></i>
+        <p class="mb-0">No organizational chart uploaded yet. Click <strong>"UPDATE CHART PICTURE"</strong> to add one.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ================= 3. ABOUT STATEMENTS MANAGEMENT ================= -->
+<div class="admin-panel-card">
+  <h2 class="admin-panel-title">About Statements Management</h2>
+
+  <button type="button" class="btn-admin-green mb-3" data-bs-toggle="modal" data-bs-target="#createAboutModal">
+    CREATE ABOUT
+  </button>
+
+  <div class="table-responsive">
+    <table class="admin-data-table">
+      <thead>
+        <tr>
+          <th style="width: 25%;">TITLE</th>
+          <th style="width: 45%;">BODY</th>
+          <th class="text-center" style="width: 15%;">IS ACTIVE</th>
+          <th class="text-center" style="width: 15%;">ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ab in about_items %}
+        <tr>
+          <td class="fw-bold">{{ ab.title }}</td>
+          <td class="text-muted" style="max-width: 380px;">
+            {{ ab.body[:90] }}{% if ab.body|length > 90 %}...{% endif %}
+          </td>
+          <td class="text-center">
+            <span class="badge {{ 'bg-success' if ab.is_active else 'bg-secondary' }}">
+              {{ 'Active' if ab.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="text-center" style="white-space: nowrap;">
+            <button type="button" class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showAboutModal{{ ab.id }}">
+              SHOW
+            </button>
+            <button type="button" class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editAboutModal{{ ab.id }}">
+              EDIT
+            </button>
+            <form action="{{ url_for('admin_delete_about', id=ab.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete {{ ab.title }}?');">
+              <button class="btn-tbl-delete" type="submit">
+                DELETE
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- MODALS PLACED OUTSIDE THE TABLE (NO STACKING BUGS)        -->
+<!-- ========================================================= -->
+
+<!-- MODAL: UPLOAD / EDIT ADMISSION FILE -->
+<div class="modal fade" id="editAdmissionFileModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_update_admission_file') }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-edit">
+        <h5 class="modal-title fw-bold">
+          <i class="fa fa-file-pdf me-2"></i>Upload Admission Form
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="mb-3">
+          <label class="form-label">Select Document File (PDF preferred)</label>
+          <input type="file" name="admission_file" class="form-control" accept=".pdf,.doc,.docx" required>
+          <small class="text-muted mt-1 d-block">Allowed: PDF, DOC, DOCX. Max: 16 MB.</small>
+        </div>
+        {% if admission_file %}
+        <div class="alert alert-info py-2 px-3 small mb-0">
+          <i class="fa fa-info-circle me-1"></i> Uploading a new file will automatically replace: <strong>{{ admission_file }}</strong>
+        </div>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-modal-save">Upload &amp; Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: UPDATE ORGANIZATIONAL CHART -->
+<div class="modal fade" id="editOrgChartModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_update_org_chart') }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-edit">
+        <h5 class="modal-title fw-bold">
+          <i class="fa fa-sitemap me-2"></i>Update School Organizational Chart
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="mb-3">
+          <label class="form-label">Select Full-Size Organizational Chart Image</label>
+          <input type="file" name="org_chart_image" class="form-control" accept="image/*" required onchange="previewOrgChart(this)">
+          <small class="text-muted mt-1 d-block">Supported formats: JPG, PNG, WebP.</small>
+        </div>
+        <div id="orgChartPreviewContainer" class="mt-3 text-center" style="display: none;">
+          <label class="form-label d-block text-start">New Image Preview:</label>
+          <img id="orgChartPreviewImg" src="" alt="Preview" class="img-fluid rounded border shadow-sm" style="max-height: 350px;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-modal-save">Upload &amp; Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% for ab in about_items %}
+<!-- MODAL: SHOW ABOUT -->
+<div class="modal fade" id="showAboutModal{{ ab.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-header-view">
+        <h5 class="modal-title fw-bold"><i class="fa fa-info-circle me-2"></i>{{ ab.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="mb-3">
+          <label class="form-label">SECTION TITLE</label>
+          <div class="p-2 bg-light rounded border fw-bold fs-6">{{ ab.title }}</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">BODY / CONTENT</label>
+          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.7;">{{ ab.body }}</div>
+        </div>
+        <div>
+          <label class="form-label">STATUS</label>
+          <div>
+            <span class="badge {{ 'bg-success' if ab.is_active else 'bg-secondary' }} fs-6">
+              {{ 'Active' if ab.is_active else 'Inactive' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT ABOUT -->
+<div class="modal fade" id="editAboutModal{{ ab.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_edit_about', id=ab.id) }}" method="POST">
+      <div class="modal-header modal-header-edit">
+        <h5 class="modal-title fw-bold"><i class="fa fa-pen me-2"></i>Edit: {{ ab.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Section Title</label>
+            <input type="text" name="title" class="form-control" value="{{ ab.title }}" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Content Statement</label>
+            <textarea name="body" class="form-control" rows="6" required>{{ ab.body }}</textarea>
+          </div>
+          <div class="col-12">
+            <div class="form-check form-switch mt-2">
+              <input class="form-check-input" type="checkbox" name="is_active" id="activeAbout{{ ab.id }}" value="1" {% if ab.is_active %}checked{% endif %}>
+              <label class="form-check-label fw-bold small text-dark" for="activeAbout{{ ab.id }}">
+                Is Active &amp; Display on Portal
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-modal-save">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+<!-- MODAL: CREATE ABOUT -->
+<div class="modal fade" id="createAboutModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_create_about') }}" method="POST">
+      <div class="modal-header modal-header-create">
+        <h5 class="modal-title fw-bold"><i class="fa fa-plus-circle me-2"></i>Add About Section</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Section Title</label>
+            <input type="text" name="title" class="form-control" placeholder="e.g. VISION, MISSION, GOALS" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Content Statement</label>
+            <textarea name="body" class="form-control" rows="6" placeholder="Enter statement content..." required></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-admin-green m-0">Save Section</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer class="admin-canvas-footer mt-4">
+  <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
+  <div>
+    <a href="#">SchoolAdmin</a>
+    <a href="#">About Us</a>
+  </div>
+</footer>
+
+<script>
+function previewOrgChart(input) {
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('orgChartPreviewImg').src = e.target.result;
+      document.getElementById('orgChartPreviewContainer').style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+
+{% endblock %}

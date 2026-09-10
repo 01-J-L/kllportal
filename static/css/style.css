@@ -1,0 +1,3048 @@
+/* ==========================================================================
+   KOLEHIYO NG LUNGSOD NG LIPA (KLL) WEB PORTAL - MASTER STYLESHEET
+   Matches Screenshots: Pages 1 to 9
+   ========================================================================== */
+
+/* ------------------- ROOT VARIABLES & THEMING ------------------- */
+:root {
+  --portal-blue: #1e60d5;
+  --portal-blue-dark: #164cb0;
+  --portal-wave-top: #2563eb;
+  --portal-wave-bottom: #1d4ed8;
+  --bg-sky-blue: #eaf1fb;
+  --text-dark: #0f172a;
+  --text-muted: #64748b;
+  --coral-red: #f43f5e;
+  --coral-red-hover: #e11d48;
+  
+  /* Admin Panel Specifics */
+  --admin-sidebar-bg: #282f3a;
+  --admin-sidebar-hover: #374151;
+  --admin-btn-show: #1c64f2;
+  --admin-btn-edit: #ec4899;
+  --admin-btn-delete: #e02424;
+  --admin-btn-new: #10b981;
+}
+
+/* ------------------- GLOBAL RESETS ------------------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  color: #334155;
+  background-color: #ffffff;
+  margin: 0;
+  padding: 0;
+}
+
+body.portal-body {
+  background-color: var(--bg-sky-blue);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ------------------- TOP BLACK RIBBON (Page 1, 3, 4) ------------------- */
+.top-black-bar {
+  background-color: #0b0f19;
+  color: #d1d5db;
+  font-size: 0.8rem;
+  padding: 8px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+}
+
+.top-bar-separator {
+  display: inline;
+}
+
+.top-black-bar a {
+  color: #d1d5db;
+  text-decoration: none;
+  margin-left: 14px;
+  font-size: 0.85rem;
+  transition: color 0.2s ease-in-out;
+}
+
+.top-black-bar a:hover {
+  color: #ffffff;
+}
+
+/* ------------------- MAIN WHITE NAVBAR ------------------- */
+.kll-home-nav,
+.kll-navbar {
+  background-color: #ffffff;
+  padding: 12px 50px;
+  border-bottom: 1px solid #f1f5f9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  z-index: 1030;
+  overflow: visible;
+}
+
+.kll-home-nav .navbar-collapse {
+  overflow: visible;
+}
+
+.kll-home-brand,
+.kll-logo-text {
+  color: var(--portal-blue) !important;
+  font-weight: 900;
+  font-size: 1.2rem;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Brand spans: show full by default, hide short */
+.kll-home-brand .brand-full {
+  display: inline;
+}
+.kll-home-brand .brand-short {
+  display: none;
+}
+
+/* Navbar Toggler */
+.kll-home-nav .navbar-toggler {
+  border: none;
+  padding: 6px 10px;
+  font-size: 1.2rem;
+  line-height: 1;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.kll-home-nav .navbar-toggler:focus {
+  box-shadow: none !important;
+}
+.kll-home-nav .navbar-toggler i {
+  color: #334155;
+}
+
+.kll-home-links,
+.kll-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kll-home-links a,
+.kll-nav-links a,
+.kll-home-nav .nav-link {
+  color: #334155;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: color 0.2s ease-in-out;
+  padding: 8px 10px;
+}
+
+.kll-home-links a:hover,
+.kll-nav-links a:hover,
+.kll-home-nav .nav-link:hover,
+.kll-home-nav .nav-link:focus {
+  color: var(--portal-blue);
+}
+
+/* --- PAGES DROPDOWN (DESKTOP) --- */
+.kll-home-nav .dropdown-menu {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 8px 0;
+  margin-top: 8px;
+  min-width: 220px;
+  right: 0;
+  left: auto;
+  overflow: visible;
+}
+
+.kll-home-nav .dropdown-menu .dropdown-item {
+  padding: 9px 18px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.kll-home-nav .dropdown-menu .dropdown-item:hover {
+  background-color: #eff6ff;
+  color: var(--portal-blue);
+}
+
+.kll-home-nav .dropdown-menu .dropdown-item i {
+  width: 20px;
+  text-align: center;
+  font-size: 0.85rem;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.kll-home-nav .dropdown-menu .dropdown-divider {
+  border-color: #f1f5f9;
+  margin: 4px 0;
+}
+
+/* Mobile nav link styling */
+@media (max-width: 991px) {
+  .kll-home-nav .navbar-nav {
+    padding: 10px 0;
+  }
+  .kll-home-nav .nav-link {
+    padding: 10px 0;
+    font-size: 0.9rem;
+  }
+  .kll-home-nav .dropdown-menu {
+    border: none;
+    box-shadow: none;
+    padding-left: 15px;
+  }
+  /* Pages accordion: hide submenu by default on mobile, show when .show */
+  .kll-home-nav .dropdown-menu#pagesSubmenu {
+    display: none;
+    position: static;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0 0 0 15px;
+    margin: 0;
+  }
+  .kll-home-nav .dropdown-menu#pagesSubmenu.show {
+    display: block;
+  }
+  .kll-home-nav .dropdown-menu#pagesSubmenu .dropdown-item {
+    padding: 8px 0 !important;
+    font-size: 0.88rem;
+    color: #475569;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .kll-home-nav .dropdown-menu#pagesSubmenu .dropdown-item:hover {
+    color: var(--portal-blue);
+    background: transparent;
+  }
+  .kll-home-nav .btn-join-us,
+  .kll-home-nav .btn-login-nav {
+    display: inline-block;
+    margin: 4px 0;
+    text-align: center;
+  }
+}
+
+.user-welcome-text {
+  font-size: 0.85rem;
+  color: #334155;
+  font-weight: 500;
+  margin-right: 12px;
+}
+
+.btn-blue-logout,
+.btn-login-nav {
+  background-color: var(--portal-blue);
+  color: #ffffff !important;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 7px 18px;
+  border-radius: 6px;
+  text-decoration: none;
+  border: none;
+  display: inline-block;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.btn-blue-logout:hover,
+.btn-login-nav:hover {
+  background-color: var(--portal-blue-dark);
+}
+
+.btn-join-us {
+  background-color: #2563eb;
+  color: #ffffff !important;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 7px 18px;
+  border-radius: 6px;
+  border: none;
+  text-decoration: none;
+}
+
+/* ------------------- HERO BANNER WITH TORN PAPER BOTTOM ------------------- */
+.about-hero-wrapper {
+  position: relative;
+  background: linear-gradient(rgba(30, 96, 213, 0.88), rgba(26, 84, 190, 0.92)),
+              url('') center/cover no-repeat;
+  padding: 105px 20px 145px 20px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.about-hero-title {
+  font-size: 3.2rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Realistic Jagged Torn/Ripped Paper Mask at Base of Blue Banners */
+.torn-paper-edge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 55px;
+  background-color: #ffffff;
+  clip-path: polygon(
+    0% 100%, 100% 100%, 100% 35%,
+    98% 45%, 96% 25%, 94% 50%, 91% 30%, 88% 55%, 85% 20%, 83% 48%, 80% 32%,
+    77% 60%, 74% 28%, 71% 52%, 68% 30%, 65% 58%, 62% 22%, 60% 46%, 57% 35%,
+    54% 65%, 51% 28%, 48% 54%, 45% 32%, 42% 62%, 39% 25%, 36% 50%, 33% 38%,
+    30% 64%, 27% 26%, 24% 52%, 21% 34%, 18% 58%, 15% 24%, 12% 48%, 9% 36%,
+    6% 62%, 3% 28%, 1% 45%, 0% 30%
+  );
+}
+
+/* Alternate Curved Banner */
+.torn-wave-banner {
+  background: linear-gradient(180deg, var(--portal-wave-top) 0%, var(--portal-wave-bottom) 100%);
+  color: #ffffff;
+  text-align: center;
+  padding: 55px 20px 85px 20px;
+  clip-path: polygon(
+    0 0, 100% 0, 100% 86%, 
+    96% 91%, 91% 84%, 84% 94%, 78% 87%, 71% 95%, 64% 86%, 57% 93%, 50% 85%, 
+    43% 94%, 36% 87%, 29% 95%, 22% 86%, 15% 93%, 8% 85%, 0 91%
+  );
+  margin-bottom: 30px;
+}
+
+.torn-wave-banner h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* Banner Search Box (Pages 3, 4, 5) */
+.banner-search-container {
+  max-width: 480px;
+  margin: 18px auto 0 auto;
+}
+.banner-search-container .form-select {
+  max-width: 90px;
+  border-radius: 4px 0 0 4px;
+}
+.banner-search-container .form-control {
+  border-radius: 0;
+}
+.banner-search-container .btn-search {
+  background-color: var(--coral-red);
+  color: #ffffff;
+  border-radius: 0 4px 4px 0;
+  font-weight: 700;
+  border: none;
+  padding: 6px 18px;
+}
+
+/* ------------------- HOME PAGE STYLES (Page 1) ------------------- */
+.hero-courses-section {
+  position: relative;
+  background-color: #fcfdfe;
+  background-image: 
+    radial-gradient(#cbd5e1 0.75px, transparent 0.75px),
+    radial-gradient(#cbd5e1 0.75px, #fcfdfe 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+  padding: 85px 20px 75px 20px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.geo-shape {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.18;
+}
+.geo-shape-1 {
+  top: 15%;
+  left: 18%;
+  width: 70px;
+  height: 70px;
+  border: 8px solid #64748b;
+  transform: rotate(45deg);
+}
+.geo-shape-2 {
+  top: 20%;
+  right: 18%;
+  width: 0;
+  height: 0;
+  border-left: 45px solid transparent;
+  border-right: 45px solid transparent;
+  border-bottom: 75px solid #64748b;
+}
+
+.sub-header-red {
+  color: var(--coral-red);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  position: relative;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.sub-header-red::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 2px;
+  margin-top: 4px;
+  border-bottom: 2px dashed var(--coral-red);
+}
+
+.hero-main-title {
+  color: var(--text-dark);
+  font-weight: 900;
+  font-size: 2.6rem;
+  max-width: 650px;
+  margin: 0 auto;
+  line-height: 1.25;
+}
+
+/* Two-column Contact Section */
+.contact-container-section {
+  max-width: 950px;
+  margin: 50px auto 90px auto;
+  padding: 0 15px;
+}
+
+.contact-left-box {
+  background-color: #eaf2fd;
+  padding: 40px 30px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 22px;
+}
+
+.info-item-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.icon-square {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 1.35rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.icon-blue { background-color: #2563eb; }
+.icon-red { background-color: #ef4444; }
+.icon-yellow { background-color: #f59e0b; }
+
+.info-item-text h6 {
+  margin: 0;
+  font-weight: 800;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+.info-item-text p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.contact-right-form {
+  padding: 20px 20px 20px 45px;
+}
+.contact-form-title {
+  color: var(--text-dark);
+  font-weight: 900;
+  font-size: 2.3rem;
+  margin-bottom: 25px;
+}
+
+.form-line-input {
+  border: none;
+  border-bottom: 1.5px solid #e2e8f0;
+  border-radius: 0;
+  padding: 12px 2px;
+  font-size: 0.88rem;
+  color: #334155;
+  background: transparent;
+  width: 100%;
+  outline: none;
+  margin-bottom: 22px;
+  transition: border-color 0.2s;
+}
+.form-line-input:focus {
+  border-bottom-color: var(--portal-blue);
+}
+.form-line-input::placeholder {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+/* ------------------- STUDENT LOGIN FLOATING CARD (Page 1) ------------------- */
+.login-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 15px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 370px;
+  background: #ffffff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(43, 112, 228, 0.12);
+}
+
+.login-header-wave {
+  position: relative;
+  background-color: var(--portal-blue);
+  height: 140px;
+}
+.login-header-wave svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.login-body {
+  padding: 25px 32px 35px 32px;
+}
+.login-body h4 {
+  font-weight: 800;
+  color: #1e293b;
+  font-size: 1.25rem;
+  margin-bottom: 22px;
+}
+.login-body .form-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.login-body .input-group-custom {
+  background-color: #eaf1fb;
+  border-radius: 6px;
+  border: 1px solid #d3e2f8;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.login-body .input-group-custom input {
+  background: transparent;
+  border: none;
+  font-size: 0.9rem;
+  padding: 10px 14px;
+  width: 100%;
+  outline: none;
+  color: #1e293b;
+}
+.login-body .input-group-custom .btn-toggle-pw {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.btn-coral-signin {
+  background-color: var(--coral-red);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 22px;
+  transition: background-color 0.2s;
+}
+.btn-coral-signin:hover {
+  background-color: var(--coral-red-hover);
+}
+
+.forgot-password-link {
+  color: var(--coral-red);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: block;
+  text-align: center;
+}
+.forgot-password-link:hover {
+  text-decoration: underline;
+}
+
+/* ------------------- ABOUT US & ORG CHART (Page 1 & 2) ------------------- */
+.about-section-container {
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 30px 25px 80px 25px;
+}
+
+.about-block {
+  margin-bottom: 35px;
+}
+.about-block h3 {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--text-dark);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.about-block p {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.admission-link-box {
+  margin: 40px 0 25px 0;
+  font-size: 0.9rem;
+  color: #334155;
+}
+.admission-link-box a {
+  color: var(--text-dark);
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.org-chart-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--text-dark);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+.org-chart-wrapper {
+  background-color: #cbd5e1;
+  border: 4px solid #0284c7;
+  padding: 25px 15px 35px 15px;
+  border-radius: 4px;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  background-image: 
+    linear-gradient(135deg, #0284c7 12px, transparent 12px),
+    linear-gradient(-135deg, #0284c7 12px, transparent 12px);
+  background-size: 100% 100%;
+}
+
+.org-header-text h2 {
+  font-weight: 900;
+  font-size: 1.8rem;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+.org-header-text h5 {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #475569;
+  letter-spacing: 1px;
+  margin-bottom: 30px;
+}
+
+.org-node {
+  display: inline-flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1.5px solid #94a3b8;
+  border-radius: 4px;
+  padding: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  text-align: left;
+}
+.org-node img {
+  width: 48px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 3px;
+  margin-right: 8px;
+}
+.org-node-badge-gold {
+  background-color: #f59e0b;
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.org-node-role-blue {
+  background-color: #0284c7;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  margin-top: 2px;
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+.org-line-vert {
+  width: 2px;
+  height: 25px;
+  background-color: #334155;
+  margin: 0 auto;
+}
+.org-line-horiz {
+  height: 2px;
+  background-color: #334155;
+  width: 60%;
+  margin: 0 auto;
+}
+
+.org-deans-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 15px;
+}
+.org-dean-node {
+  background-color: #ffffff;
+  border: 1px solid #94a3b8;
+  border-radius: 3px;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+}
+.org-dean-node img {
+  width: 38px;
+  height: 42px;
+  object-fit: cover;
+  margin-right: 5px;
+}
+.org-dean-node .dean-name {
+  background-color: #f59e0b;
+  color: #ffffff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 2px 4px;
+  border-radius: 2px;
+  display: block;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+.org-dean-node .dean-dept {
+  background-color: #0284c7;
+  color: #ffffff;
+  font-size: 0.52rem;
+  font-weight: 700;
+  padding: 2px 3px;
+  border-radius: 2px;
+  display: block;
+  margin-top: 2px;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+/* ------------------- ACADEMICS ACCORDION (Page 2) ------------------- */
+.courses-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 20px 80px 20px;
+}
+
+.kll-accordion .accordion-item {
+  border: 1px solid #dbeafe;
+  border-radius: 6px !important;
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.kll-accordion .accordion-button {
+  background-color: var(--portal-blue) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 14px 22px;
+  box-shadow: none !important;
+  border: none;
+}
+
+.kll-accordion .accordion-button::after {
+  filter: brightness(0) invert(1);
+  transform: scale(0.85);
+  transition: transform 0.2s ease-in-out;
+}
+
+.kll-accordion .accordion-body {
+  background-color: #ffffff;
+  padding: 28px 30px;
+  color: #334155;
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+.course-detail-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-top: 18px;
+  margin-bottom: 10px;
+}
+.course-detail-title:first-child {
+  margin-top: 0;
+}
+
+.course-list {
+  padding-left: 18px;
+  margin-bottom: 15px;
+}
+.course-list li {
+  margin-bottom: 4px;
+}
+
+/* ------------------- ACADEMIC CALENDAR (Page 3) ------------------- */
+.calendar-wrapper {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 10px 20px 80px 20px;
+}
+
+.calendar-top-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-cal-group {
+  display: inline-flex;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #ffffff;
+}
+.btn-cal-group button, .btn-cal-group a {
+  background: #ffffff;
+  border: none;
+  border-right: 1px solid #d1d5db;
+  padding: 5px 16px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.btn-cal-group button:last-child, .btn-cal-group a:last-child {
+  border-right: none;
+}
+.btn-cal-group button:hover, .btn-cal-group a:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+.btn-cal-group button.active-view {
+  background: #e5e7eb;
+  font-weight: 700;
+  color: #111827;
+}
+
+.calendar-month-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #4b5563;
+  margin: 0;
+}
+
+.calendar-grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.calendar-grid-table th {
+  background-color: #ffffff;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 8px 4px;
+  border: 1px solid #e5e7eb;
+}
+.calendar-grid-table td {
+  border: 1px solid #e5e7eb;
+  height: 95px;
+  width: 14.28%;
+  vertical-align: top;
+  padding: 6px;
+  position: relative;
+}
+.calendar-grid-table td.cell-muted {
+  background-color: #e5e7eb;
+}
+.calendar-grid-table td.cell-weekend {
+  background-color: #f0f7ff;
+}
+
+.cal-date-number {
+  display: block;
+  text-align: right;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.cal-event-pill {
+  background-color: #236dbf;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 2px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  text-decoration: none;
+}
+.cal-event-pill:hover {
+  color: #ffffff;
+  background-color: #1a569a;
+}
+
+/* ------------------- STUDENT PROFILE FOOTER (Page 3) ------------------- */
+.torn-wave-footer {
+  background: #1e3a8a;
+  color: #ffffff;
+  padding: 60px 40px 30px 40px;
+  clip-path: polygon(
+    0 15%, 8% 2%, 16% 16%, 24% 4%, 32% 14%, 40% 1%, 48% 13%, 56% 3%, 64% 15%, 72% 2%, 80% 14%, 88% 5%, 96% 16%, 100% 3%,
+    100% 100%, 0 100%
+  );
+}
+
+/* ------------------- FLOATING BACK-TO-TOP BUTTON ------------------- */
+.btn-floating-top {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 42px;
+  height: 42px;
+  background-color: var(--portal-blue);
+  color: #ffffff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 999;
+}
+.btn-floating-top:hover {
+  background-color: var(--portal-blue-dark);
+  color: #ffffff;
+}
+
+/* ------------------- SCHOOLADMIN PORTAL (Pages 6 - 9) ------------------- */
+.admin-sidebar {
+  width: 250px;
+  background-color: var(--admin-sidebar-bg);
+  min-height: 100vh;
+}
+.admin-sidebar a {
+  color: #9ca3af;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.admin-sidebar a:hover, .admin-sidebar a.active {
+  background-color: var(--admin-sidebar-hover);
+  color: #ffffff;
+}
+
+/* Admin Table Action Buttons matching exact colors */
+.btn-admin-show {
+  background-color: var(--admin-btn-show);
+  color: #ffffff;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  font-weight: 600;
+  border-radius: 3px;
+  border: none;
+}
+.btn-admin-show:hover {
+  background-color: #1a56cc;
+  color: #ffffff;
+}
+
+.btn-admin-edit {
+  background-color: var(--admin-btn-edit);
+  color: #ffffff;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  font-weight: 600;
+  border-radius: 3px;
+  border: none;
+}
+.btn-admin-edit:hover {
+  background-color: #db2777;
+  color: #ffffff;
+}
+
+.btn-admin-delete {
+  background-color: var(--admin-btn-delete);
+  color: #ffffff;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  font-weight: 600;
+  border-radius: 3px;
+  border: none;
+}
+.btn-admin-delete:hover {
+  background-color: #b91c1c;
+  color: #ffffff;
+}
+
+.btn-admin-new {
+  background-color: var(--admin-btn-new);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 4px;
+  border: none;
+  padding: 6px 14px;
+}
+.btn-admin-new:hover {
+  background-color: #059669;
+  color: #ffffff;
+}
+
+/* --- USER PROFILE PAGE STYLES --- */
+.profile-content-area {
+  max-width: 1200px;
+  margin: 40px auto 60px auto;
+  padding: 0 40px;
+  min-height: 420px;
+}
+
+/* Floating White Profile Card */
+.user-profile-card {
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+  padding: 30px 35px 40px 35px;
+  border: 1px solid #f1f5f9;
+}
+
+.user-profile-card h5 {
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 1.15rem;
+  margin-bottom: 35px;
+}
+
+/* Underline Field Rows */
+.profile-field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+  margin-bottom: 22px;
+}
+
+.profile-field-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.profile-field-label {
+  color: #64748b;
+  font-size: 0.86rem;
+  width: 35%;
+}
+
+.profile-field-value {
+  color: #0f172a;
+  font-size: 0.88rem;
+  width: 65%;
+  font-weight: 500;
+}
+
+.no-enrollment-text {
+  color: #64748b;
+  font-size: 0.95rem;
+  padding-top: 15px;
+}
+
+/* --- TORN MOUNTAIN / RUGGED PAPER FOOTER ("Get In Touch") --- */
+.dark-torn-footer {
+  background-color: #0d1322;
+  color: #ffffff;
+  position: relative;
+  padding-top: 70px;
+  padding-bottom: 45px;
+  margin-top: 60px;
+}
+
+/* Mountainous / Rugged jagged tear top edge */
+.footer-torn-edge {
+  position: absolute;
+  top: -42px;
+  left: 0;
+  width: 100%;
+  height: 45px;
+  background-color: #0d1322;
+  clip-path: polygon(
+    0% 100%, 100% 100%, 100% 45%,
+    98% 30%, 96% 55%, 93% 20%, 90% 50%, 87% 35%, 85% 65%, 82% 25%, 79% 55%,
+    76% 40%, 73% 70%, 70% 30%, 67% 60%, 64% 20%, 61% 55%, 58% 35%, 55% 65%,
+    52% 25%, 49% 50%, 46% 15%, 43% 45%, 40% 30%, 37% 60%, 34% 25%, 31% 50%,
+    28% 35%, 25% 65%, 22% 20%, 19% 55%, 16% 40%, 13% 70%, 10% 30%, 7% 60%,
+    4% 25%, 2% 50%, 0% 35%
+  );
+}
+
+.get-in-touch-wrapper {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.get-in-touch-wrapper h4 {
+  font-weight: 800;
+  font-size: 1.45rem;
+  margin-bottom: 22px;
+  color: #ffffff;
+}
+
+.get-in-touch-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: #cbd5e1;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.get-in-touch-info i {
+  color: #94a3b8;
+  margin-top: 3px;
+  font-size: 1rem;
+}
+
+/* Map frame inside footer */
+.footer-map-frame {
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+  border: 1px solid #1e293b;
+  height: 170px;
+}
+
+.footer-map-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* --- EVENTS GALLERY SPECIFIC STYLES --- */
+.events-gallery-wrapper {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 20px 25px 80px 25px;
+}
+
+/* Integrated Search Bar inside Blue Banner */
+.gallery-search-box {
+  max-width: 500px;
+  margin: 18px auto 0 auto;
+  display: flex;
+  background: #ffffff;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.gallery-search-box .search-dropdown {
+  background: #ffffff;
+  border: none;
+  border-right: 1px solid #e2e8f0;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  outline: none;
+  cursor: pointer;
+}
+
+.gallery-search-box .search-input {
+  border: none;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  width: 100%;
+  outline: none;
+  color: #1e293b;
+}
+
+.gallery-search-box .search-input::placeholder {
+  color: #94a3b8;
+}
+
+.gallery-search-box .search-btn {
+  background-color: var(--coral-red, #f43f5e);
+  color: #ffffff;
+  border: none;
+  padding: 8px 24px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.gallery-search-box .search-btn:hover {
+  background-color: var(--coral-red-hover, #e11d48);
+}
+
+/* Event Gallery Poster Card (Matches the portrait aspect ratio in screenshot) */
+.event-poster-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-poster-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.event-poster-img-wrap {
+  width: 100%;
+  height: 380px;
+  background-color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.event-poster-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.event-poster-body {
+  padding: 14px 16px;
+}
+
+.event-poster-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.event-poster-date {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-bottom: 0;
+}
+
+/* --- NEWS PAGE SPECIFIC STYLES --- */
+.news-page-wrapper {
+  max-width: 950px;
+  margin: 0 auto;
+  padding: 15px 20px 80px 20px;
+}
+
+/* School Uniform Infographic Poster Card (Matches Screenshot exactly) */
+.uniform-poster-card {
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+  color: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  margin: 0 auto 35px auto;
+  border: 1px solid #b91c1c;
+}
+
+.uniform-poster-header {
+  padding: 25px 30px 10px 30px;
+  position: relative;
+}
+
+.uniform-sub-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #fecaca;
+  margin-bottom: 2px;
+}
+
+.uniform-main-title {
+  font-size: 2.3rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-transform: uppercase;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* Info Box Outline on the Right */
+.uniform-guidelines-box {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  padding: 16px;
+  margin-top: 10px;
+  position: relative;
+}
+
+.uniform-guidelines-box .info-icon {
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  background: #ffffff;
+  color: #991b1b;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.uniform-guidelines-list {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #fef2f2;
+}
+
+.uniform-guidelines-list li {
+  margin-bottom: 8px;
+}
+
+/* Male & Female Section */
+.uniform-photos-row {
+  background-color: rgba(255, 255, 255, 0.08);
+  padding: 20px 30px 25px 30px;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  text-align: center;
+}
+
+.uniform-photo-block {
+  width: 45%;
+}
+
+.uniform-photo-block img {
+  height: 220px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.uniform-label-tag {
+  background-color: #ffffff;
+  color: #991b1b;
+  font-weight: 900;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-top: 10px;
+  letter-spacing: 0.5px;
+}
+
+/* Standard Generic News Card for other DB items */
+.generic-news-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  margin-bottom: 25px;
+}
+
+.generic-news-card img {
+  width: 100%;
+  max-height: 380px;
+  object-fit: cover;
+}
+
+.generic-news-body {
+  padding: 24px;
+}
+
+.generic-news-title {
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.generic-news-meta {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 14px;
+}
+
+/* --- STUDENT HANDBOOK PDF DOCUMENT CARDS --- */
+.handbook-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 20px 80px 20px;
+}
+
+.pdf-doc-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 25px 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pdf-doc-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* Scalable Vector Silhouette for the Red Adobe PDF Card matching the Screenshot */
+.adobe-pdf-icon-wrapper {
+  width: 140px;
+  height: 160px;
+  margin: 0 auto 15px auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adobe-pdf-icon-wrapper svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pdf-doc-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin-top: 5px;
+  margin-bottom: 4px;
+}
+
+.pdf-doc-size {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.btn-download-pdf {
+  background-color: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 14px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-download-pdf:hover {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+/* --- SCHOOLADMIN LOGIN FULLSCREEN VIEW (Page 6) --- */
+.schooladmin-login-body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.55)),
+              url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+.schooladmin-card-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 15px;
+}
+
+/* White Floating Card */
+.schooladmin-login-card {
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+  padding: 0 28px 30px 28px;
+  position: relative;
+  text-align: center;
+  margin-top: 30px;
+}
+
+/* Floating Pink/Crimson Top Header Box */
+.schooladmin-card-header-floating {
+  background: linear-gradient(135deg, #e91e63 0%, #d81b60 100%);
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 22px 15px;
+  margin-top: -30px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 20px rgba(233, 30, 99, 0.35);
+}
+
+.schooladmin-card-header-floating h3 {
+  font-size: 1.55rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  letter-spacing: 0.3px;
+}
+
+.schooladmin-card-header-floating p {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Form inputs */
+.schooladmin-form-input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 11px 15px;
+  font-size: 0.88rem;
+  color: #334155;
+  outline: none;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+}
+
+.schooladmin-form-input:focus {
+  border-color: #e91e63;
+}
+
+.schooladmin-form-input::placeholder {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+/* Solid Pink Login Button */
+.btn-schooladmin-login {
+  width: 100%;
+  background-color: #e91e63;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  text-transform: uppercase;
+  margin-top: 6px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 12px rgba(233, 30, 99, 0.25);
+  transition: background-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.btn-schooladmin-login:hover {
+  background-color: #c2185b;
+  box-shadow: 0 6px 15px rgba(233, 30, 99, 0.35);
+}
+
+/* Footer note inside card */
+.schooladmin-card-footer-note {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Bottom Screen Footer */
+.schooladmin-screen-footer {
+  padding: 15px 50px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.schooladmin-screen-footer a,
+.schooladmin-screen-footer span {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* --- SCHOOLADMIN DASHBOARD & SIDEBAR LAYOUT (Page 6) --- */
+.admin-body-bg {
+  background-color: #f8fafc;
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Dark Floating Sidebar with Rounded Corners matching screenshot */
+.admin-sidebar-floating {
+  width: 250px;
+  background-color: #262932;
+  margin: 20px 0 20px 20px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  min-height: calc(100vh - 40px);
+  flex-shrink: 0;
+}
+
+.admin-sidebar-brand {
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding: 0 24px 20px 24px;
+  margin: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-sidebar-close-btn {
+  display: none;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #cbd5e1;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.admin-sidebar-close-btn:hover {
+  background: rgba(255,255,255,0.2);
+  color: #ffffff;
+}
+
+/* Sidebar scrollable nav area */
+.admin-sidebar-nav-scroll {
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.admin-sidebar-nav-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.admin-sidebar-nav-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-sidebar-nav-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 4px;
+}
+
+.admin-sidebar-nav {
+  list-style: none;
+  padding: 15px 0;
+  margin: 0;
+}
+
+.admin-sidebar-nav li a {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 24px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+}
+
+.admin-sidebar-nav li a:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.admin-sidebar-nav li a.active-link {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left: 4px solid #3b82f6;
+}
+
+.admin-sidebar-nav li a i {
+  width: 18px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.admin-sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Main Dashboard Canvas */
+.admin-main-canvas {
+  flex-grow: 1;
+  padding: 30px 45px;
+  overflow-y: auto;
+  height: 100vh;
+  position: relative;
+  overflow-x: visible;
+}
+
+/* Admin Top Bar Responsive */
+.admin-top-bar-responsive {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 5px;
+  min-height: 40px;
+}
+
+.admin-top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-breadcrumb-responsive {
+  font-size: 0.88rem;
+  color: #94a3b8;
+}
+.admin-breadcrumb-responsive .active-crumb {
+  color: #334155;
+  font-weight: 700;
+}
+
+.admin-dashboard-heading {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #1e3a8a;
+  margin-bottom: 25px;
+  letter-spacing: -0.5px;
+}
+
+/* Card Showcase Holding the Building Photo */
+.campus-showcase-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  margin-top: 15px;
+}
+
+/* Floating Blue Badge Icon on Top Left of Photo */
+.campus-floating-badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+  z-index: 10;
+}
+
+/* High-res Image Display of the Multi-Purpose Building */
+.campus-photo-img {
+  width: 100%;
+  height: 600px;
+  object-fit: cover;
+  display: block;
+}
+
+/* --- SCHOOLADMIN TOP NAVBAR & BREADCRUMBS (legacy, kept for compatibility) --- */
+.admin-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 5px;
+}
+
+.admin-breadcrumb {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  margin: 0;
+}
+.admin-breadcrumb .active-crumb {
+  color: #334155;
+  font-weight: 700;
+}
+
+.admin-top-user-info {
+  font-size: 0.88rem;
+  color: #64748b;
+}
+.admin-top-user-info a {
+  color: #334155;
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: 15px;
+}
+
+/* --- MAIN WHITE MANAGEMENT CARD --- */
+.admin-panel-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+  padding: 30px 35px 40px 35px;
+  margin-bottom: 30px;
+}
+
+.admin-panel-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 20px;
+}
+
+/* Green "CREATE NEW" button matching screenshot */
+.btn-admin-green {
+  background-color: #34d399;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  text-transform: uppercase;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.btn-admin-green:hover {
+  background: #059669;
+  color: #ffffff;
+}
+
+/* --- EXACT DATA TABLE STYLING --- */
+.admin-data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-data-table th {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  background-color: transparent;
+}
+
+.admin-data-table td {
+  padding: 18px 16px;
+  font-size: 0.88rem;
+  color: #475569;
+  vertical-align: middle;
+  border-bottom: 1px solid #f8fafc;
+}
+
+/* Alternating zebra row shading as shown in screenshot */
+.admin-data-table tbody tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+/* Blue Role Badges matching screenshot */
+.role-badge-pill {
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 5px 14px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  display: inline-block;
+  letter-spacing: 0.3px;
+}
+
+/* Button Group matching Screenshot Colors */
+.btn-tbl-show {
+  background-color: #1c64f2;
+  color: #ffffff !important;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: none;
+  margin-right: 4px;
+  cursor: pointer;
+}
+.btn-tbl-show:hover { background-color: #1a56cc; }
+
+.btn-tbl-edit {
+  background-color: #e91e63;
+  color: #ffffff !important;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: none;
+  margin-right: 4px;
+  cursor: pointer;
+}
+.btn-tbl-edit:hover { background-color: #d81b60; }
+
+.btn-tbl-delete {
+  background-color: #ef4444;
+  color: #ffffff !important;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+.btn-tbl-delete:hover { background-color: #dc2626; }
+
+/* Admin Bottom Footer */
+.admin-canvas-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: #64748b;
+  padding: 10px 5px 25px 5px;
+}
+.admin-canvas-footer a {
+  color: #64748b;
+  text-decoration: none;
+  margin-left: 20px;
+  font-weight: 600;
+}
+.admin-canvas-footer a:hover {
+  color: #1e293b;
+}
+
+/* --- CIRCULAR PAGINATION MATCHING SCREENSHOT --- */
+.kll-pagination-wrapper {
+  margin-top: 25px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kll-page-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.kll-page-circle:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+/* Active Pink Page Circle matching screenshot */
+.kll-page-circle.active-page {
+  background-color: #e91e63;
+  border-color: #e91e63;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(233, 30, 99, 0.3);
+}
+
+.kll-page-circle.arrow-btn {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* ==========================================================================
+   ADMIN MODAL SYSTEM: HARDENED Z-INDEX, OPACITY & CLICK-THROUGH PREVENTION
+   ========================================================================== */
+
+/* 1. Backdrop sits cleanly behind modals */
+.modal-backdrop {
+  z-index: 1050 !important;
+  opacity: 0.45 !important;
+}
+
+/* 2. Modal itself floats high above the backdrop */
+.modal {
+  z-index: 1065 !important;
+  pointer-events: auto !important;
+}
+
+.modal-dialog {
+  z-index: 1066 !important;
+  pointer-events: auto !important;
+  max-width: 800px;
+  margin: 1.75rem auto;
+}
+
+/* 3. Pure solid-white card body (removes transparency and see-through bugs) */
+.modal-content {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  border-radius: 14px !important;
+  border: none !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35) !important;
+  overflow: hidden !important;
+  position: relative !important;
+  z-index: 1070 !important;
+  pointer-events: auto !important;
+}
+
+/* Headers */
+.modal-header {
+  padding: 18px 24px !important;
+  border-bottom: none !important;
+  color: #ffffff !important;
+}
+
+.modal-header.modal-header-edit {
+  background: linear-gradient(135deg, #e91e63 0%, #d81b60 100%) !important;
+}
+
+.modal-header.modal-header-view {
+  background: linear-gradient(135deg, #1e60d5 0%, #15459b 100%) !important;
+}
+
+.modal-header.modal-header-create {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+/* Body & Footer */
+.modal-body {
+  padding: 24px 28px !important;
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  pointer-events: auto !important;
+}
+
+.modal-footer {
+  padding: 14px 28px !important;
+  border-top: 1px solid #f1f5f9 !important;
+  background-color: #f8fafc !important;
+  pointer-events: auto !important;
+}
+
+/* Form controls & inputs inside modals */
+.modal-body .form-label {
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  color: #4b5563 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 6px !important;
+  display: block;
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+  background-color: #f9fafb !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  font-size: 0.88rem !important;
+  color: #1f2937 !important;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 1075 !important;
+}
+
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+  background-color: #ffffff !important;
+  border-color: #e91e63 !important;
+  box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.15) !important;
+  outline: none !important;
+}
+
+.modal-thumbnail-preview {
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Modal Action Buttons */
+.btn-modal-cancel {
+  background-color: #e5e7eb !important;
+  color: #374151 !important;
+  font-weight: 600 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 9px 20px !important;
+  font-size: 0.85rem !important;
+  cursor: pointer;
+}
+
+.btn-modal-cancel:hover {
+  background-color: #d1d5db !important;
+}
+
+.btn-modal-save {
+  background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 9px 24px !important;
+  font-size: 0.85rem !important;
+  box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3) !important;
+  cursor: pointer;
+}
+
+.btn-modal-save:hover {
+  background: linear-gradient(135deg, #d81b60 0%, #ad1457 100%) !important;
+}
+
+/* Smooth fade transition for auto-dismiss alerts */
+.auto-dismiss-alert {
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.auto-dismiss-alert.fade:not(.show) {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* ==========================================================================
+   PROFESSIONAL FLASH TOAST NOTIFICATION SYSTEM
+   ========================================================================== */
+
+.flash-toast-wrapper {
+  position: fixed;
+  top: 25px;
+  right: 25px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+  width: calc(100% - 40px);
+  pointer-events: none; /* Let clicks pass through empty wrapper */
+}
+
+.flash-toast-card {
+  pointer-events: auto;
+  position: relative;
+  background: #ffffff !important;
+  border-radius: 10px;
+  padding: 14px 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06);
+  border: 1px solid #f1f5f9;
+  border-left: 5px solid #64748b;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  overflow: hidden;
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.4s ease;
+}
+
+/* Category Accent Left Borders & Icon Colors */
+.flash-toast-card.toast-success {
+  border-left-color: #10b981;
+}
+.flash-toast-card.toast-danger {
+  border-left-color: #ef4444;
+}
+.flash-toast-card.toast-warning {
+  border-left-color: #f59e0b;
+}
+.flash-toast-card.toast-info {
+  border-left-color: #3b82f6;
+}
+
+/* Status Icon Badge */
+.toast-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+.toast-success .toast-icon-badge {
+  background-color: #ecfdf5;
+  color: #10b981;
+}
+.toast-danger .toast-icon-badge {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+.toast-warning .toast-icon-badge {
+  background-color: #fffbeb;
+  color: #f59e0b;
+}
+.toast-info .toast-icon-badge {
+  background-color: #eff6ff;
+  color: #3b82f6;
+}
+
+/* Toast Text */
+.toast-content-body {
+  flex-grow: 1;
+  padding-right: 8px;
+}
+.toast-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 2px;
+  text-transform: capitalize;
+}
+.toast-message {
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Close Button */
+.toast-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+.toast-close-btn:hover {
+  color: #334155;
+  background-color: #f1f5f9;
+}
+
+/* Animated 5-Second Countdown Progress Bar */
+.toast-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  opacity: 0.7;
+}
+.toast-success .toast-progress-bar {
+  background-color: #10b981;
+  animation: toastProgress 5s linear forwards;
+}
+.toast-danger .toast-progress-bar {
+  background-color: #ef4444;
+  animation: toastProgress 5s linear forwards;
+}
+.toast-warning .toast-progress-bar {
+  background-color: #f59e0b;
+  animation: toastProgress 5s linear forwards;
+}
+.toast-info .toast-progress-bar {
+  background-color: #3b82f6;
+  animation: toastProgress 5s linear forwards;
+}
+
+/* Keyframes */
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(60px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastProgress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.flash-toast-card.toast-hiding {
+  opacity: 0 !important;
+  transform: translateY(-12px) scale(0.96) !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE MEDIA QUERIES — ALL DEVICES
+   ========================================================================== */
+
+/* ---------- ADMIN SIDEBAR OVERLAY (MOBILE) ---------- */
+.admin-sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.admin-sidebar-overlay.active {
+  display: block;
+  opacity: 1;
+}
+
+/* Mobile hamburger for admin top bar */
+.admin-hamburger-btn {
+  display: none;
+  background: none;
+  border: 1px solid #e2e8f0;
+  font-size: 1.1rem;
+  color: #334155;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  line-height: 1;
+  transition: all 0.2s;
+}
+.admin-hamburger-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #d1d5db;
+}
+
+/* ---------- LARGE SCREENS (≥1200px) — Desktop ---------- */
+@media (min-width: 1200px) {
+  .kll-home-nav {
+    padding: 12px 50px;
+  }
+  .top-black-bar {
+    padding: 8px 50px;
+  }
+}
+
+/* ---------- MEDIUM SCREENS (992px–1199px) — Small Desktop / Large Tablet ---------- */
+@media (max-width: 1199px) {
+  .kll-home-nav {
+    padding: 12px 30px;
+  }
+  .top-black-bar {
+    padding: 8px 30px;
+  }
+  .admin-main-canvas {
+    padding: 25px 30px;
+  }
+  .campus-photo-img {
+    height: 400px;
+  }
+}
+
+/* ---------- TABLETS (768px–991px) ---------- */
+@media (max-width: 991px) {
+  /* --- PORTAL NAVBAR --- */
+  .kll-home-nav {
+    padding: 10px 20px;
+  }
+  .kll-home-brand {
+    font-size: 1rem;
+  }
+
+  /* --- TOP BLACK BAR --- */
+  .top-black-bar {
+    padding: 8px 20px;
+    font-size: 0.75rem;
+  }
+
+  /* --- HERO SECTIONS --- */
+  .about-hero-wrapper {
+    padding: 70px 20px 120px 20px;
+  }
+  .about-hero-title {
+    font-size: 2.4rem;
+    letter-spacing: 1px;
+  }
+  .hero-main-title {
+    font-size: 2rem;
+  }
+
+  /* --- CONTACT SECTION --- */
+  .contact-right-form {
+    padding: 20px;
+  }
+  .contact-form-title {
+    font-size: 1.8rem;
+  }
+
+  /* --- ORG CHART GRID --- */
+  .org-deans-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* --- PROFILE PAGE --- */
+  .profile-content-area {
+    padding: 0 20px;
+  }
+  .profile-field-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .profile-field-label {
+    width: 100%;
+  }
+  .profile-field-value {
+    width: 100%;
+  }
+
+  /* --- ADMIN SIDEBAR: slide-in from left --- */
+  .admin-sidebar-floating {
+    position: fixed;
+    left: -280px;
+    top: 0;
+    z-index: 1050;
+    margin: 0;
+    border-radius: 0;
+    height: 100vh;
+    min-height: 100vh;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+  .admin-sidebar-floating.open {
+    left: 0;
+  }
+  .admin-sidebar-close-btn {
+    display: flex;
+  }
+
+  /* --- ADMIN CANVAS --- */
+  .admin-main-canvas {
+    margin-left: 0 !important;
+    padding: 20px 20px;
+  }
+
+  /* --- ADMIN HAMBURGER BUTTON --- */
+  .admin-hamburger-btn {
+    display: flex;
+  }
+
+  /* --- ADMIN TOP BAR --- */
+  .admin-top-bar-responsive {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* --- ADMIN PANEL CARD --- */
+  .admin-panel-card {
+    padding: 20px;
+  }
+  .admin-panel-title {
+    font-size: 1.5rem;
+  }
+
+  /* --- ADMIN TABLE BUTTONS --- */
+  .btn-tbl-show,
+  .btn-tbl-edit,
+  .btn-tbl-delete {
+    font-size: 0.68rem;
+    padding: 4px 10px;
+  }
+
+  /* --- DASHBOARD STAT CARDS --- */
+  .admin-dashboard-heading {
+    font-size: 1.6rem;
+  }
+
+  /* --- CAMPUS PHOTO --- */
+  .campus-photo-img {
+    height: 300px;
+  }
+
+  /* --- TORN WAVE BANNER --- */
+  .torn-wave-banner h1 {
+    font-size: 1.6rem;
+  }
+
+  /* --- UNIFORM POSTER --- */
+  .uniform-main-title {
+    font-size: 1.8rem;
+  }
+  .uniform-photos-row {
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+  .uniform-photo-block {
+    width: 80%;
+  }
+
+  /* --- SCHOOLADMIN LOGIN FOOTER --- */
+  .schooladmin-screen-footer {
+    padding: 15px 20px;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  /* --- CALENDAR TOP CONTROLS --- */
+  .calendar-top-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* --- EVENT POSTER IMAGE --- */
+  .event-poster-img-wrap {
+    height: 280px;
+  }
+
+  /* --- FOOTER ON TABLET --- */
+  .dark-torn-footer {
+    margin-top: 40px;
+    padding-top: 55px;
+  }
+  .footer-torn-edge {
+    top: -38px;
+    height: 40px;
+  }
+  .footer-map-frame {
+    height: 200px;
+  }
+}
+
+/* ---------- PHABLETS / LARGE PHONES (576px–767px) ---------- */
+@media (max-width: 767px) {
+  /* --- PORTAL NAVBAR --- */
+  .kll-home-nav {
+    padding: 10px 15px;
+  }
+
+  /* --- TOP BLACK BAR --- */
+  .top-black-bar {
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    padding: 10px 15px;
+  }
+  .top-bar-left {
+    justify-content: center;
+  }
+  .top-bar-right {
+    justify-content: center;
+  }
+  .top-bar-separator {
+    display: none;
+  }
+
+  /* --- HERO SECTIONS --- */
+  .about-hero-wrapper {
+    padding: 60px 15px 110px 15px;
+  }
+  .about-hero-title {
+    font-size: 1.9rem;
+    letter-spacing: 0.5px;
+  }
+  .hero-main-title {
+    font-size: 1.7rem;
+  }
+
+  /* --- SUB HEADERS --- */
+  .sub-header-red {
+    font-size: 0.7rem;
+  }
+
+  /* --- ABOUT SECTION --- */
+  .about-section-container {
+    padding: 20px 15px 60px 15px;
+  }
+
+  /* --- CONTACT SECTION --- */
+  .contact-container-section {
+    margin: 30px auto 60px auto;
+  }
+  .contact-left-box {
+    padding: 30px 20px;
+  }
+  .contact-right-form {
+    padding: 20px 15px;
+  }
+  .contact-form-title {
+    font-size: 1.5rem;
+  }
+
+  /* --- COURSES --- */
+  .courses-container {
+    padding: 15px 15px 60px 15px;
+  }
+  .kll-accordion .accordion-body {
+    padding: 20px 15px;
+  }
+
+  /* --- CALENDAR --- */
+  .calendar-wrapper {
+    padding: 10px 10px 60px 10px;
+  }
+
+  /* --- EVENTS GALLERY --- */
+  .events-gallery-wrapper {
+    padding: 15px 15px 60px 15px;
+  }
+  .event-poster-img-wrap {
+    height: 220px;
+  }
+  .gallery-search-box {
+    flex-direction: column;
+    max-width: 100%;
+  }
+  .gallery-search-box .search-dropdown {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  /* --- NEWS --- */
+  .news-page-wrapper {
+    padding: 10px 15px 60px 15px;
+  }
+
+  /* --- HANDBOOK --- */
+  .handbook-wrapper {
+    padding: 10px 15px 60px 15px;
+  }
+
+  /* --- STUDENT LOGIN CARD --- */
+  .login-card {
+    max-width: 100%;
+    border-radius: 12px;
+  }
+  .login-body {
+    padding: 20px 24px 30px 24px;
+  }
+  .login-header-wave {
+    height: 110px;
+  }
+
+  /* --- PROFILE --- */
+  .profile-content-area {
+    padding: 0 15px;
+    margin: 25px auto 40px auto;
+  }
+  .user-profile-card {
+    padding: 20px;
+  }
+
+  /* --- ADMIN SIDEBAR --- */
+  .admin-sidebar-floating {
+    width: 260px;
+  }
+
+  /* --- ADMIN CANVAS --- */
+  .admin-main-canvas {
+    padding: 15px 12px;
+    overflow-x: hidden;
+  }
+
+  /* --- ADMIN DASHBOARD HEADING --- */
+  .admin-dashboard-heading {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+  }
+
+  /* --- ADMIN STAT CARDS --- */
+  .card h2.fw-bolder {
+    font-size: 1.8rem !important;
+  }
+
+  /* --- ADMIN PANEL TITLE --- */
+  .admin-panel-title {
+    font-size: 1.3rem;
+  }
+
+  /* --- ADMIN DATA TABLE --- */
+  .admin-data-table th {
+    font-size: 0.68rem;
+    padding: 10px 8px;
+  }
+  .admin-data-table td {
+    padding: 12px 8px;
+    font-size: 0.8rem;
+  }
+  .role-badge-pill {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+  }
+
+  /* --- ADMIN TABLE BUTTONS STACK --- */
+  .admin-table-action-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* --- CAMPUS PHOTO --- */
+  .campus-photo-img {
+    height: 220px;
+  }
+
+  /* --- FOOTER --- */
+  .dark-torn-footer {
+    margin-top: 30px;
+    padding-top: 50px;
+    padding-bottom: 30px;
+  }
+  .footer-torn-edge {
+    top: -35px;
+    height: 38px;
+  }
+  .get-in-touch-wrapper h4 {
+    font-size: 1.2rem;
+  }
+
+  /* --- TORN WAVE BANNER --- */
+  .torn-wave-banner {
+    padding: 40px 15px 70px 15px;
+  }
+  .torn-wave-banner h1 {
+    font-size: 1.3rem;
+  }
+
+  /* --- UNIFORM POSTER --- */
+  .uniform-poster-header {
+    padding: 20px 15px 10px 15px;
+  }
+  .uniform-main-title {
+    font-size: 1.5rem;
+  }
+  .uniform-photos-row {
+    padding: 15px;
+  }
+  .uniform-photo-block img {
+    height: 160px;
+  }
+
+  /* --- GENERIC NEWS CARD --- */
+  .generic-news-title {
+    font-size: 1.1rem;
+  }
+
+  /* --- PDF DOC CARDS --- */
+  .adobe-pdf-icon-wrapper {
+    width: 100px;
+    height: 120px;
+  }
+
+  /* --- SCHOOLADMIN LOGIN --- */
+  .schooladmin-login-card {
+    max-width: 340px;
+    padding: 0 20px 25px 20px;
+  }
+  .schooladmin-card-header-floating h3 {
+    font-size: 1.3rem;
+  }
+
+  /* --- ADMIN CANVAS FOOTER --- */
+  .admin-canvas-footer {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+  .admin-canvas-footer a {
+    margin-left: 0;
+    margin-right: 10px;
+  }
+
+  /* --- MODALS ON MOBILE --- */
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+  .modal-body {
+    padding: 16px !important;
+  }
+  .modal-body .row.g-3 > [class*="col-"] {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* --- PAGINATION --- */
+  .kll-pagination-wrapper {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* --- SEARCH BOXES IN HERO --- */
+  .banner-search-container {
+    max-width: 100%;
+  }
+
+  /* --- FLOATING BACK-TO-TOP BUTTON --- */
+  .btn-floating-top {
+    bottom: 15px;
+    right: 15px;
+    width: 38px;
+    height: 38px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ---------- SMALL PHONES (<576px) ---------- */
+@media (max-width: 575px) {
+  /* --- PORTAL BRAND TEXT OVERFLOW --- */
+  .kll-home-brand {
+    font-size: 0.82rem;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .kll-home-brand .brand-full {
+    display: none;
+  }
+  .kll-home-brand .brand-short {
+    display: inline;
+  }
+
+  .about-hero-title {
+    font-size: 1.6rem;
+  }
+  .hero-main-title {
+    font-size: 1.5rem;
+  }
+
+  .contact-form-title {
+    font-size: 1.3rem;
+  }
+  .about-block h3 {
+    font-size: 1.1rem;
+  }
+  .org-header-text h2 {
+    font-size: 1.3rem;
+  }
+  .org-deans-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .campus-photo-img {
+    height: 180px;
+  }
+  .event-poster-img-wrap {
+    height: 180px;
+  }
+  .uniform-photo-block {
+    width: 100%;
+  }
+  .uniform-photo-block img {
+    height: 130px;
+  }
+
+  /* --- FOOTER STACKED --- */
+  .dark-torn-footer {
+    margin-top: 25px;
+    padding-top: 45px;
+    padding-bottom: 25px;
+  }
+  .footer-torn-edge {
+    top: -32px;
+    height: 35px;
+  }
+  .get-in-touch-wrapper {
+    padding: 0 15px;
+  }
+  .get-in-touch-wrapper h4 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+  .get-in-touch-info {
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+  }
+  .footer-map-frame {
+    height: 160px;
+  }
+  .footer-map-frame iframe {
+    height: 100%;
+  }
+
+  /* --- NAVBAR TOGGLER VISIBLE --- */
+  .kll-home-nav .navbar-toggler {
+    padding: 5px 8px;
+    font-size: 1.1rem;
+  }
+
+  /* --- MOBILE NAV LINKS --- */
+  .kll-home-nav .navbar-nav {
+    padding: 8px 0;
+  }
+  .kll-home-nav .nav-link {
+    padding: 8px 0;
+    font-size: 0.88rem;
+  }
+  .kll-home-nav .btn-join-us,
+  .kll-home-nav .btn-login-nav {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    margin: 3px 0;
+  }
+
+  /* --- TOP BLACK BAR MOBILE --- */
+  .top-black-bar {
+    padding: 8px 12px;
+    font-size: 0.72rem;
+  }
+
+  /* --- ADMIN SIDEBAR --- */
+  .admin-sidebar-floating {
+    width: 100%;
+    max-width: 280px;
+  }
+  .admin-top-bar-right .d-none.d-md-inline {
+    display: none !important;
+  }
+  .admin-main-canvas {
+    padding: 12px 10px;
+  }
+  .admin-panel-card {
+    padding: 15px;
+    border-radius: 12px;
+  }
+  .admin-panel-title {
+    font-size: 1.15rem;
+  }
+
+  /* --- LOGIN CARD --- */
+  .login-card {
+    border-radius: 12px;
+  }
+  .login-body {
+    padding: 18px 20px 28px 20px;
+  }
+  .login-header-wave {
+    height: 100px;
+  }
+
+  /* --- PROFILE --- */
+  .user-profile-card {
+    padding: 18px 15px;
+  }
+
+  /* --- PAGINATION --- */
+  .kll-pagination-wrapper {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

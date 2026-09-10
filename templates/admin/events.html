@@ -1,0 +1,273 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+
+
+<!-- MAIN WHITE CARD -->
+<div class="admin-panel-card">
+
+  <h2 class="admin-panel-title">Events Management</h2>
+
+  <button type="button" class="btn-admin-green mb-3" data-bs-toggle="modal" data-bs-target="#createEventModal">
+    CREATE NEW EVENT
+  </button>
+
+  <div class="table-responsive">
+    <table class="admin-data-table">
+      <thead>
+        <tr>
+          <th>IMAGE</th>
+          <th>TITLE</th>
+          <th>DESCRIPTION</th>
+          <th>EVENT DATE</th>
+          <th>EVENT LINK</th>
+          <th class="text-center">IS ACTIVE</th>
+          <th class="text-center">ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ev in events %}
+        <tr>
+          <td>
+            {% if ev.image_url %}
+            <img src="{{ url_for('static', filename='uploads/' + ev.image_url) }}"
+                 alt="{{ ev.title }}"
+                 style="width: 48px; height: 48px; object-fit: cover; border-radius: 4px;"
+                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=100&q=80';">
+            {% else %}
+            <div class="bg-light border text-muted d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 4px; font-size: 0.65rem;">
+              No Img
+            </div>
+            {% endif %}
+          </td>
+          <td class="fw-bold">{{ ev.title }}</td>
+          <td class="text-muted" style="max-width: 250px;">{{ ev.description[:55] }}{% if ev.description|length > 55 %}...{% endif %}</td>
+          <td style="white-space: nowrap;">{{ ev.event_date.strftime('%b %d, %Y %I:%M %p') if ev.event_date else 'TBD' }}</td>
+          <td>
+            {% if ev.link_url %}
+              <a href="{{ ev.link_url }}" target="_blank" class="badge bg-primary text-decoration-none">
+                <i class="fa fa-external-link-alt me-1"></i> Visit Link
+              </a>
+            {% else %}
+              <span class="text-muted small">None</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <span class="badge {{ 'bg-success' if ev.is_active else 'bg-secondary' }}">
+              {{ 'Active' if ev.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="text-center" style="white-space: nowrap;">
+            <button type="button" class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showEventModal{{ ev.id }}">
+              SHOW
+            </button>
+            <button type="button" class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editEventModal{{ ev.id }}">
+              EDIT
+            </button>
+            <form action="{{ url_for('admin_delete_event', id=ev.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete event {{ ev.title }}?');">
+              <button class="btn-tbl-delete" type="submit">
+                DELETE
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- MODALS PLACED OUTSIDE TABLE (PREVENTS CLICK-BLOCK BUGS)   -->
+<!-- ========================================================= -->
+
+{% for ev in events %}
+
+<!-- SHOW EVENT MODAL -->
+<div class="modal fade" id="showEventModal{{ ev.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-header-view">
+        <h5 class="modal-title fw-bold"><i class="fa fa-calendar-alt me-2"></i>{{ ev.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        {% if ev.image_url %}
+        <div class="text-center mb-3">
+          <img src="{{ url_for('static', filename='uploads/' + ev.image_url) }}"
+               alt="{{ ev.title }}"
+               class="img-fluid rounded border shadow-sm"
+               style="max-height: 250px;">
+        </div>
+        {% endif %}
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">EVENT DATE &amp; TIME</label>
+            <div class="p-2 bg-light rounded border fw-bold">
+              {{ ev.event_date.strftime('%B %d, %Y at %I:%M %p') if ev.event_date else 'TBD' }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">STATUS</label>
+            <div class="p-2 bg-light rounded border">
+              <span class="badge {{ 'bg-success' if ev.is_active else 'bg-secondary' }}">
+                {{ 'Active' if ev.is_active else 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">DESCRIPTION</label>
+          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.6;">{{ ev.description }}</div>
+        </div>
+        <div>
+          <label class="form-label">EVENT LINK</label>
+          <div class="p-2 bg-light rounded border">
+            {% if ev.link_url %}
+              <a href="{{ ev.link_url }}" target="_blank" class="fw-bold text-primary text-decoration-none">
+                <i class="fa fa-link me-1"></i> {{ ev.link_url }}
+              </a>
+            {% else %}
+              <span class="text-muted">No external link provided.</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT EVENT MODAL -->
+<div class="modal fade" id="editEventModal{{ ev.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_edit_event', id=ev.id) }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-edit">
+        <h5 class="modal-title fw-bold"><i class="fa fa-pen me-2"></i>Edit Event: {{ ev.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-md-7">
+            <label class="form-label">Event Title</label>
+            <input type="text" name="title" class="form-control" value="{{ ev.title }}" required>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Event Date &amp; Time</label>
+            <input type="datetime-local" name="event_date" class="form-control"
+                   value="{{ ev.event_date.strftime('%Y-%m-%dT%H:%M') if ev.event_date else '' }}" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="4" required>{{ ev.description }}</textarea>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Event Link (Leave blank to remove)</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="fa fa-link text-muted"></i></span>
+              <input type="url" name="link_url" class="form-control" value="{{ ev.link_url or '' }}" placeholder="https://facebook.com/events/...">
+            </div>
+          </div>
+
+          <div class="col-md-8">
+            <label class="form-label">Replace Poster / Flyer (Optional)</label>
+            <input type="file" name="image" class="form-control" accept="image/*" onchange="previewEvImg(this, 'prevEv{{ ev.id }}')">
+            {% if ev.image_url %}
+            <small class="text-muted d-block mt-1">Current: {{ ev.image_url }}</small>
+            {% endif %}
+          </div>
+
+          <div class="col-md-4 text-center">
+            <label class="form-label d-block">Preview</label>
+            <img id="prevEv{{ ev.id }}"
+                 src="{{ url_for('static', filename='uploads/' + ev.image_url) if ev.image_url else 'https://via.placeholder.com/150' }}"
+                 class="modal-thumbnail-preview"
+                 alt="Preview">
+          </div>
+
+          <div class="col-12">
+            <div class="form-check form-switch mt-2">
+              <input class="form-check-input" type="checkbox" name="is_active" id="activeEv{{ ev.id }}" value="1" {% if ev.is_active %}checked{% endif %}>
+              <label class="form-check-label fw-bold small text-dark" for="activeEv{{ ev.id }}">
+                Is Active &amp; Display on Portal
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-modal-save">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endfor %}
+
+<!-- CREATE EVENT MODAL -->
+<div class="modal fade" id="createEventModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_create_event') }}" method="POST" enctype="multipart/form-data">
+      <div class="modal-header modal-header-create">
+        <h5 class="modal-title fw-bold"><i class="fa fa-plus-circle me-2"></i>Add Campus Event</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-md-7">
+            <label class="form-label">Event Title</label>
+            <input type="text" name="title" class="form-control" placeholder="e.g. Orientation 2025" required>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Date &amp; Time</label>
+            <input type="datetime-local" name="event_date" class="form-control" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="4" placeholder="Schedule details, guidelines, venue..." required></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Event Link (Optional)</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="fa fa-link text-muted"></i></span>
+              <input type="url" name="link_url" class="form-control" placeholder="https://facebook.com/events/...">
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Poster / Flyer (Optional)</label>
+            <input type="file" name="image" class="form-control" accept="image/*">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-admin-green m-0">Save Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer class="admin-canvas-footer mt-4">
+  <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
+  <div><a href="#">SchoolAdmin</a><a href="#">About Us</a></div>
+</footer>
+
+<script>
+function previewEvImg(input, targetId) {
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById(targetId).src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+
+{% endblock %}

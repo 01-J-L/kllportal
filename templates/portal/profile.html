@@ -1,0 +1,90 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+<div class="profile-content-area" style="min-height: 480px; padding: 40px 15px;">
+  <div class="container" style="max-width: 1140px;">
+    <div class="row">
+      
+      <!-- LEFT: USER PROFILE CARD (Screenshot Exact) -->
+      <div class="col-lg-4 col-md-5 mb-4 mb-md-0">
+        <div class="user-profile-card shadow-sm p-4 bg-white rounded border" style="border-radius: 6px;">
+          <h5 class="fw-bold mb-4" style="color: #0f172a; font-size: 1.15rem;">User Profile</h5>
+
+          <div class="profile-field-row d-flex justify-content-between align-items-center py-2 border-bottom">
+            <span class="profile-field-label text-muted small" style="font-size: 0.85rem;">Full name:</span>
+            <span class="profile-field-value fw-semibold text-dark text-end" style="font-size: 0.88rem;">{{ user.name if user else 'student user' }}</span>
+          </div>
+
+          <div class="profile-field-row d-flex justify-content-between align-items-center py-2 border-bottom">
+            <span class="profile-field-label text-muted small" style="font-size: 0.85rem;">Email address</span>
+            <span class="profile-field-value fw-semibold text-dark text-end" style="font-size: 0.88rem;">{{ user.email if user else 'student@student.com' }}</span>
+          </div>
+
+          <div class="profile-field-row d-flex justify-content-between align-items-center py-2">
+            <span class="profile-field-label text-muted small" style="font-size: 0.85rem;">Phone number</span>
+            <span class="profile-field-value fw-semibold text-dark text-end" style="font-size: 0.88rem;">{{ user.phone_number if (user and user.phone_number) else '0999192857' }}</span>
+          </div>
+
+          <!-- SHOW ONLY IF ACTUALLY ENROLLED -->
+          {% if enrolled_courses %}
+          <div class="mt-4 pt-3 border-top">
+            <h6 class="fw-bold mb-2 small text-dark"><i class="fa fa-graduation-cap me-1 text-primary"></i> Enrolled Program</h6>
+            {% for e in enrolled_courses %}
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-success" style="font-size: 0.65rem;">{{ e.course_code }}</span>
+              <span class="small text-secondary">{{ e.course_name }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- RIGHT: ENROLLMENT STATUS (Shows "No Enrollment data yet" if NOT enrolled) -->
+      <div class="col-lg-8 col-md-7 ps-md-4">
+        {% if enrolled_courses %}
+          <!-- ONLY SHOWN IF ENROLLED -->
+          <div class="user-profile-card shadow-sm p-4 bg-white rounded border" style="border-radius: 6px;">
+            <h5 class="fw-bold mb-1"><i class="fa fa-lightbulb me-2 text-warning"></i>Recommended For You</h5>
+            <p class="text-muted small mb-3">Based on your enrolled program and profile, here are suggestions to enhance your college journey:</p>
+
+            <div class="row g-3">
+              {% for rec in recommendations %}
+              <div class="col-md-6">
+                <a href="{{ rec.link }}" class="text-decoration-none">
+                  <div class="p-3 rounded h-100 border bg-light">
+                    <div class="d-flex align-items-start gap-2">
+                      <div class="rounded d-flex align-items-center justify-content-center flex-shrink-0" 
+                           style="width: 36px; height: 36px; background: {{ rec.color }}20; color: {{ rec.color }};">
+                        <i class="fa {{ rec.icon }}"></i>
+                      </div>
+                      <div class="flex-grow-1">
+                        <span class="badge mb-1" style="background: {{ rec.color }}25; color: {{ rec.color }}; font-size: 0.6rem;">{{ rec.badge }}</span>
+                        <h6 class="fw-bold mb-1 text-dark" style="font-size: 0.88rem;">{{ rec.title }}</h6>
+                        <p class="mb-0 text-muted small" style="font-size: 0.76rem; line-height: 1.4;">{{ rec.desc }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% else %}
+          <!-- SHOWN WHEN NOT ENROLLED (Screenshot Exact) -->
+          <div class="pt-3" style="color: #64748b; font-size: 0.95rem; font-weight: 500;">
+            No Enrollment data yet
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Floating Back-to-Top Blue Button -->
+<a href="#" class="btn-floating-top" title="Back to Top">
+  <i class="fa fa-angle-double-up"></i>
+</a>
+
+{% endblock %}

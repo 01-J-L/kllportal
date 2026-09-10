@@ -1,0 +1,329 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+<!-- Exact Heading from Screenshot -->
+<h1 class="admin-dashboard-heading mb-4">
+  Welcome to Kolehiyo ng Lungsod ng Lipa Admin Portal
+</h1>
+
+<!-- ================= REAL-TIME DASHBOARD STATS ROW ================= -->
+<div class="row g-4 mb-4">
+  
+  <!-- 1. TOTAL STUDENTS (PRIMARY METRIC) -->
+  <div class="col-xl-3 col-md-6">
+    <div class="card border-0 rounded-4 shadow-sm p-3 bg-white h-100 position-relative overflow-hidden" style="border-left: 5px solid #2563eb !important;">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">Total Students</div>
+          <h2 class="fw-bolder text-dark my-1" style="font-size: 2.3rem;">{{ total_students }}</h2>
+          <small class="text-success fw-semibold">
+            <i class="fa fa-check-circle me-1"></i> {{ active_students }} Active Accounts
+          </small>
+        </div>
+        <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; background-color: #eff6ff; color: #2563eb; font-size: 1.5rem;">
+          <i class="fa fa-user-graduate"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. TOTAL COURSES & PROGRAMS -->
+  <div class="col-xl-3 col-md-6">
+    <div class="card border-0 rounded-4 shadow-sm p-3 bg-white h-100 position-relative overflow-hidden" style="border-left: 5px solid #10b981 !important;">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">Academic Programs</div>
+          <h2 class="fw-bolder text-dark my-1" style="font-size: 2.3rem;">{{ total_courses }}</h2>
+          <small class="text-muted">
+            <i class="fa fa-book me-1 text-success"></i> Active Offerings
+          </small>
+        </div>
+        <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; background-color: #ecfdf5; color: #10b981; font-size: 1.5rem;">
+          <i class="fa fa-graduation-cap"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CAMPUS EVENTS -->
+  <div class="col-xl-3 col-md-6">
+    <div class="card border-0 rounded-4 shadow-sm p-3 bg-white h-100 position-relative overflow-hidden" style="border-left: 5px solid #f59e0b !important;">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">Campus Events</div>
+          <h2 class="fw-bolder text-dark my-1" style="font-size: 2.3rem;">{{ total_events }}</h2>
+          <small class="text-muted">
+            <i class="fa fa-calendar-alt me-1 text-warning"></i> Scheduled Events
+          </small>
+        </div>
+        <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; background-color: #fffbeb; color: #f59e0b; font-size: 1.5rem;">
+          <i class="fa fa-trophy"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. STUDENT CLUBS -->
+  <div class="col-xl-3 col-md-6">
+    <div class="card border-0 rounded-4 shadow-sm p-3 bg-white h-100 position-relative overflow-hidden" style="border-left: 5px solid #ec4899 !important;">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">Registered Clubs</div>
+          <h2 class="fw-bolder text-dark my-1" style="font-size: 2.3rem;">{{ total_clubs }}</h2>
+          <small class="text-muted">
+            <i class="fa fa-users me-1 text-pink" style="color: #ec4899;"></i> Student Orgs
+          </small>
+        </div>
+        <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; background-color: #fdf2f8; color: #ec4899; font-size: 1.5rem;">
+          <i class="fa fa-users"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= DATA ANALYTICS SECTION ================= -->
+<div class="row g-4 mb-4">
+
+  <!-- ENROLLMENT PER COURSE (Bar Chart) -->
+  <div class="col-xl-8 col-lg-7">
+    <div class="card border-0 rounded-4 shadow-sm bg-white h-100">
+      <div class="card-body p-4">
+        <h6 class="fw-bold text-dark mb-1" style="font-size: 1rem;">
+          <i class="fa fa-chart-bar me-2 text-primary"></i>Enrollment Count per Program
+        </h6>
+        <p class="text-muted small mb-3">Distribution of students enrolled across academic programs</p>
+        <div style="position: relative; height: 300px;">
+          <canvas id="enrollmentChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS DISTRIBUTION (Doughnut) -->
+  <div class="col-xl-4 col-lg-5">
+    <div class="card border-0 rounded-4 shadow-sm bg-white h-100">
+      <div class="card-body p-4">
+        <h6 class="fw-bold text-dark mb-1" style="font-size: 1rem;">
+          <i class="fa fa-chart-pie me-2" style="color: #10b981;"></i>Student Status
+        </h6>
+        <p class="text-muted small mb-3">Active vs Suspended accounts</p>
+        <div style="position: relative; height: 300px;">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="row g-4 mb-4">
+
+  <!-- MONTHLY REGISTRATIONS (Line Chart) -->
+  <div class="col-xl-8 col-lg-7">
+    <div class="card border-0 rounded-4 shadow-sm bg-white h-100">
+      <div class="card-body p-4">
+        <h6 class="fw-bold text-dark mb-1" style="font-size: 1rem;">
+          <i class="fa fa-chart-line me-2" style="color: #8b5cf6;"></i>Student Registrations Over Time
+        </h6>
+        <p class="text-muted small mb-3">Monthly new student sign-ups for the past 12 months</p>
+        <div style="position: relative; height: 300px;">
+          <canvas id="monthlyChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROLE DISTRIBUTION (Doughnut) -->
+  <div class="col-xl-4 col-lg-5">
+    <div class="card border-0 rounded-4 shadow-sm bg-white h-100">
+      <div class="card-body p-4">
+        <h6 class="fw-bold text-dark mb-1" style="font-size: 1rem;">
+          <i class="fa fa-chart-pie me-2" style="color: #ec4899;"></i>User Roles
+        </h6>
+        <p class="text-muted small mb-3">Breakdown by user type</p>
+        <div style="position: relative; height: 300px;">
+          <canvas id="roleChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= CAMPUS PHOTO SHOWCASE CARD ================= -->
+<div class="campus-showcase-card shadow-sm rounded-4 border overflow-hidden position-relative">
+  <!-- Blue Floating Badge Icon -->
+  <div class="campus-floating-badge">
+    <i class="fa fa-store"></i>
+  </div>
+
+  <!-- Building Image -->
+  <img 
+    src="{{ url_for('static', filename='images/kll_building.jpg') }}" 
+    alt="KLL Multi-Purpose Building" 
+    class="campus-photo-img"
+    style="height: 480px; width: 100%; object-fit: cover;"
+    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1600&q=80';">
+</div>
+
+<footer class="admin-canvas-footer mt-4">
+  <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
+  <div><a href="#">SchoolAdmin</a><a href="#">About Us</a></div>
+</footer>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const chartColors = ['#2563eb', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6'];
+
+  // 1. Enrollment per Course (Bar)
+  new Chart(document.getElementById('enrollmentChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ enrollment_labels | tojson }},
+      datasets: [{
+        label: 'Enrolled Students',
+        data: {{ enrollment_counts | tojson }},
+        backgroundColor: chartColors.slice(0, {{ enrollment_labels | length }}),
+        borderRadius: 6,
+        borderSkipped: false,
+        barThickness: 40
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          titleFont: { weight: 'bold' },
+          padding: 10,
+          cornerRadius: 8
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, color: '#94a3b8', font: { size: 12 } },
+          grid: { color: '#f1f5f9' }
+        },
+        x: {
+          ticks: { color: '#475569', font: { size: 11, weight: '600' } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+
+  // 2. Monthly Registrations (Line)
+  new Chart(document.getElementById('monthlyChart'), {
+    type: 'line',
+    data: {
+      labels: {{ monthly_labels | tojson }},
+      datasets: [{
+        label: 'New Students',
+        data: {{ monthly_counts | tojson }},
+        borderColor: '#8b5cf6',
+        backgroundColor: 'rgba(139, 92, 246, 0.08)',
+        borderWidth: 3,
+        pointBackgroundColor: '#8b5cf6',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          padding: 10,
+          cornerRadius: 8
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, color: '#94a3b8', font: { size: 12 } },
+          grid: { color: '#f1f5f9' }
+        },
+        x: {
+          ticks: { color: '#475569', font: { size: 10 }, maxRotation: 45 },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+
+  // 3. Status Distribution (Doughnut)
+  new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+      labels: {{ status_labels | tojson }},
+      datasets: [{
+        data: {{ status_counts | tojson }},
+        backgroundColor: ['#10b981', '#ef4444'],
+        borderWidth: 0,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { padding: 20, usePointStyle: true, pointStyleWidth: 10, font: { size: 13, weight: '600' } }
+        },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          padding: 10,
+          cornerRadius: 8
+        }
+      }
+    }
+  });
+
+  // 4. Role Distribution (Doughnut)
+  new Chart(document.getElementById('roleChart'), {
+    type: 'doughnut',
+    data: {
+      labels: {{ role_labels | tojson }},
+      datasets: [{
+        data: {{ role_counts | tojson }},
+        backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#ec4899'],
+        borderWidth: 0,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { padding: 20, usePointStyle: true, pointStyleWidth: 10, font: { size: 13, weight: '600' } }
+        },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          padding: 10,
+          cornerRadius: 8
+        }
+      }
+    }
+  });
+});
+</script>
+
+{% endblock %}
