@@ -117,7 +117,10 @@
                 </div>
                 <div class="mb-3">
                   <label class="form-label small fw-bold">Description</label>
-                  <textarea name="description" class="form-control" rows="4" required>{{ ev.description }}</textarea>
+                  <div class="cms-quill-wrapper">
+                    <div id="quillEditorEditCal{{ ev.id }}"></div>
+                    <input type="hidden" name="description" id="quillInputEditCal{{ ev.id }}" value="{{ ev.description or '' }}">
+                  </div>
                 </div>
                 <div class="row">
                   <div class="col-md-6 mb-3">
@@ -169,7 +172,10 @@
         </div>
         <div class="mb-3">
           <label class="form-label small fw-bold">Description</label>
-          <textarea name="description" class="form-control" rows="4" placeholder="Enter activity details..." required></textarea>
+          <div class="cms-quill-wrapper">
+            <div id="quillEditorCreateCal"></div>
+            <input type="hidden" name="description" id="quillInputCreateCal">
+          </div>
         </div>
         <div class="row">
           <div class="col-md-6 mb-3">
@@ -202,5 +208,65 @@
     <a href="#">License</a>
   </div>
 </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var createCalEditor = new Quill('#quillEditorCreateCal', {
+    theme: 'snow',
+    placeholder: 'Enter activity details...',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+  createCalEditor.on('text-change', function() {
+    document.getElementById('quillInputCreateCal').value = createCalEditor.root.innerHTML;
+  });
+  var createForm = document.querySelector('#createCalendarModal form');
+  if (createForm) {
+    createForm.addEventListener('submit', function() {
+      document.getElementById('quillInputCreateCal').value = createCalEditor.root.innerHTML;
+    });
+  }
+});
+</script>
+
+{% for ev in events %}
+<script>
+(function() {
+  var editor = new Quill('#quillEditorEditCal{{ ev.id }}', {
+    theme: 'snow',
+    placeholder: 'Event description...',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+  var initialContent = document.getElementById('quillInputEditCal{{ ev.id }}').value;
+  if (initialContent) { editor.root.innerHTML = initialContent; }
+  editor.on('text-change', function() {
+    document.getElementById('quillInputEditCal{{ ev.id }}').value = editor.root.innerHTML;
+  });
+  var form = document.getElementById('quillEditorEditCal{{ ev.id }}').closest('form');
+  if (form) {
+    form.addEventListener('submit', function() {
+      document.getElementById('quillInputEditCal{{ ev.id }}').value = editor.root.innerHTML;
+    });
+  }
+})();
+</script>
+{% endfor %}
 
 {% endblock %}

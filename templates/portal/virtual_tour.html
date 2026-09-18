@@ -6,8 +6,11 @@
   <h1 class="about-hero-title">VIRTUAL TOUR</h1>
 
   <div class="gallery-search-box">
-    <select class="search-dropdown">
+    <select class="search-dropdown" id="tourCategorySelect" onchange="filterTours()">
       <option value="ALL">ALL &#9662;</option>
+      {% for cat in categories %}
+      <option value="{{ cat }}">{{ cat }}</option>
+      {% endfor %}
     </select>
     <input type="text" id="tourSearchInput" class="search-input" placeholder="Search Keyword">
     <button type="button" class="search-btn" onclick="filterTours()">Search</button>
@@ -21,7 +24,7 @@
 
     {% if tours %}
       {% for t in tours %}
-      <div class="col-lg-6 col-md-6 tour-item-col" data-title="{{ t.title }}">
+      <div class="col-lg-6 col-md-6 tour-item-col" data-title="{{ t.title }}" data-category="{{ t.category or 'Facilities' }}">
         <div class="card p-3 border shadow-sm h-100" style="border-radius: 8px;">
           
           <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm mb-3 bg-dark">
@@ -61,7 +64,7 @@
 
           <div class="card-body p-1">
             <h5 class="fw-bold text-dark mb-1">{{ t.title }}</h5>
-            <p class="small text-muted mb-0" style="white-space: pre-line;">{{ t.description }}</p>
+            <div class="small text-muted mb-0" style="line-height: 1.7;">{{ t.description|safe }}</div>
           </div>
 
         </div>
@@ -87,15 +90,15 @@
 <script>
   function filterTours() {
     const term = document.getElementById('tourSearchInput').value.toLowerCase().trim();
+    const category = document.getElementById('tourCategorySelect').value;
     const items = document.querySelectorAll('.tour-item-col');
 
     items.forEach(item => {
       const title = item.getAttribute('data-title').toLowerCase();
-      if (title.includes(term)) {
-        item.style.display = '';
-      } else {
-        item.style.display = 'none';
-      }
+      const itemCat = item.getAttribute('data-category');
+      const matchesCategory = category === 'ALL' || itemCat === category;
+      const matchesKeyword = title.includes(term);
+      item.style.display = (matchesCategory && matchesKeyword) ? '' : 'none';
     });
   }
 

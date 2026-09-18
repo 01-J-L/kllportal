@@ -31,6 +31,66 @@ with app.app_context():
     mysql.connection.commit()
     cur.close()
 
+# CMS Upgrade: auto-create tables and add news columns
+with app.app_context():
+    cur = mysql.connection.cursor()
+    # Add columns to news table if they don't exist
+    for col, definition in [
+        ("category", "VARCHAR(50) DEFAULT 'General'"),
+        ("status", "VARCHAR(20) DEFAULT 'published'"),
+        ("publish_date", "DATETIME NULL")
+    ]:
+        try:
+            cur.execute(f"ALTER TABLE news ADD COLUMN {col} {definition}")
+        except Exception:
+            pass  # Column already exists
+
+    # Add category column to events table if missing
+    try:
+        cur.execute("ALTER TABLE events ADD COLUMN category VARCHAR(50) DEFAULT 'Campus Events'")
+    except Exception:
+        pass
+
+    # Add category column to clubs table if missing
+    try:
+        cur.execute("ALTER TABLE clubs ADD COLUMN category VARCHAR(50) DEFAULT 'Student Organization'")
+    except Exception:
+        pass
+
+    # Add category column to virtual_tours table if missing
+    try:
+        cur.execute("ALTER TABLE virtual_tours ADD COLUMN category VARCHAR(50) DEFAULT 'Facilities'")
+    except Exception:
+        pass
+
+    # Add category column to student_handbooks table if missing
+    try:
+        cur.execute("ALTER TABLE student_handbooks ADD COLUMN category VARCHAR(50) DEFAULT 'General'")
+    except Exception:
+        pass
+
+    # Add expires_at to emergency_advisories if missing
+    try:
+        cur.execute("ALTER TABLE emergency_advisories ADD COLUMN expires_at DATETIME NULL")
+    except Exception:
+        pass
+
+    # Emergency Advisories table
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS emergency_advisories (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            message TEXT NOT NULL,
+            advisory_type VARCHAR(30) DEFAULT 'info',
+            is_active TINYINT DEFAULT 1,
+            expires_at DATETIME NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    mysql.connection.commit()
+    cur.close()
+
 def teacher_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -173,7 +233,7 @@ def home():
     courses = cur.fetchall()
 
     # 3. Fetch first 3 latest active news items
-    cur.execute("SELECT * FROM news WHERE is_active = 1 ORDER BY id DESC LIMIT 3")
+    cur.execute("SELECT * FROM news WHERE status = 'published' AND (publish_date IS NULL OR publish_date <= NOW()) ORDER BY id DESC LIMIT 3")
     news_items = cur.fetchall()
 
     cur.close()
@@ -215,7 +275,6 @@ def about():
 @app.route('/courses')
 def courses():
     cur = mysql.connection.cursor()
-    # Fetch all active courses from the database
     cur.execute("SELECT * FROM courses WHERE is_active = 1 ORDER BY id ASC")
     courses_list = cur.fetchall()
     cur.close()
@@ -237,46 +296,42 @@ def events_gallery():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM events WHERE is_active = 1 ORDER BY event_date DESC, id DESC")
     all_events = cur.fetchall()
+    cur.execute("SELECT DISTINCT category FROM events WHERE is_active = 1 AND category IS NOT NULL ORDER BY category")
+    categories = [row['category'] for row in cur.fetchall()]
     cur.close()
     hero_image = get_site_setting('hero_banner_image', '')
-    return render_template('portal/events_gallery.html', events=all_events, hero_image=hero_image)
+    return render_template('portal/events_gallery.html', events=all_events, categories=categories, hero_image=hero_image)
 
 @app.route('/news')
 def news():
     cur = mysql.connection.cursor()
-    # Fetch all active news items, newest first
-    cur.execute("SELECT * FROM news WHERE is_active = 1 ORDER BY id DESC")
+    cur.execute("SELECT * FROM news WHERE status = 'published' AND (publish_date IS NULL OR publish_date <= NOW()) ORDER BY id DESC")
     all_news = cur.fetchall()
     cur.close()
     hero_image = get_site_setting('hero_banner_image', '')
     return render_template('portal/news.html', news=all_news, hero_image=hero_image)
-
-@app.route('/sports')
-def sports():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM sports WHERE is_active = 1 ORDER BY id DESC")
-    all_sports = cur.fetchall()
-    cur.close()
-    hero_image = get_site_setting('hero_banner_image', '')
-    return render_template('portal/sports.html', sports=all_sports, hero_image=hero_image)
 
 @app.route('/clubs')
 def clubs():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM clubs WHERE is_active = 1 ORDER BY id DESC")
     all_clubs = cur.fetchall()
+    cur.execute("SELECT DISTINCT category FROM clubs WHERE is_active = 1 AND category IS NOT NULL ORDER BY category")
+    categories = [row['category'] for row in cur.fetchall()]
     cur.close()
     hero_image = get_site_setting('hero_banner_image', '')
-    return render_template('portal/clubs.html', clubs=all_clubs, hero_image=hero_image)
+    return render_template('portal/clubs.html', clubs=all_clubs, categories=categories, hero_image=hero_image)
 
 @app.route('/virtual-tour')
 def virtual_tour():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM virtual_tours WHERE is_active = 1 ORDER BY id DESC")
     tours = cur.fetchall()
+    cur.execute("SELECT DISTINCT category FROM virtual_tours WHERE is_active = 1 AND category IS NOT NULL ORDER BY category")
+    categories = [row['category'] for row in cur.fetchall()]
     cur.close()
     hero_image = get_site_setting('hero_banner_image', '')
-    return render_template('portal/virtual_tour.html', tours=tours, hero_image=hero_image)
+    return render_template('portal/virtual_tour.html', tours=tours, categories=categories, hero_image=hero_image)
 
 # ==================== PUBLIC STUDENT HANDBOOK ROUTE ==================== #
 @app.route('/student-handbook')
@@ -284,9 +339,11 @@ def handbook():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM student_handbooks WHERE is_active = 1 ORDER BY id ASC")
     handbooks = cur.fetchall()
+    cur.execute("SELECT DISTINCT category FROM student_handbooks WHERE is_active = 1 AND category IS NOT NULL ORDER BY category")
+    categories = [row['category'] for row in cur.fetchall()]
     cur.close()
     hero_image = get_site_setting('hero_banner_image', '')
-    return render_template('portal/handbook.html', handbooks=handbooks, hero_image=hero_image)
+    return render_template('portal/handbook.html', handbooks=handbooks, categories=categories, hero_image=hero_image)
 
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
@@ -730,6 +787,7 @@ def admin_handbook():
 def admin_create_handbook():
     title = request.form.get('title')
     description = request.form.get('description')
+    category = request.form.get('category', 'General')
     file_obj = request.files.get('pdf_file')
     
     if not file_obj or file_obj.filename == '':
@@ -747,9 +805,9 @@ def admin_create_handbook():
     if uploaded_filename:
         cur = mysql.connection.cursor()
         cur.execute("""
-            INSERT INTO student_handbooks (title, description, file_url, file_size, is_active)
-            VALUES (%s, %s, %s, %s, 1)
-        """, (title, description, uploaded_filename, file_size_label))
+            INSERT INTO student_handbooks (title, description, file_url, file_size, category, is_active)
+            VALUES (%s, %s, %s, %s, %s, 1)
+        """, (title, description, uploaded_filename, file_size_label, category))
         mysql.connection.commit()
         cur.close()
         flash('Handbook document published successfully.', 'success')
@@ -764,6 +822,7 @@ def admin_create_handbook():
 def admin_edit_handbook(id):
     title = request.form.get('title')
     description = request.form.get('description')
+    category = request.form.get('category', 'General')
     is_active = 1 if request.form.get('is_active') in ['1', 'on', True] else 0
     file_obj = request.files.get('pdf_file')
 
@@ -778,15 +837,15 @@ def admin_edit_handbook(id):
         uploaded_filename = save_uploaded_file(file_obj)
         cur.execute("""
             UPDATE student_handbooks 
-            SET title=%s, description=%s, file_url=%s, file_size=%s, is_active=%s 
+            SET title=%s, description=%s, file_url=%s, file_size=%s, category=%s, is_active=%s 
             WHERE id=%s
-        """, (title, description, uploaded_filename, file_size_label, is_active, id))
+        """, (title, description, uploaded_filename, file_size_label, category, is_active, id))
     else:
         cur.execute("""
             UPDATE student_handbooks 
-            SET title=%s, description=%s, is_active=%s 
+            SET title=%s, description=%s, category=%s, is_active=%s 
             WHERE id=%s
-        """, (title, description, is_active, id))
+        """, (title, description, category, is_active, id))
 
     mysql.connection.commit()
     cur.close()
@@ -823,13 +882,14 @@ def admin_create_event():
     description = request.form.get('description')
     event_date = request.form.get('event_date')
     link_url = request.form.get('link_url')
+    category = request.form.get('category', 'Campus Events')
     img = save_uploaded_file(request.files.get('image'))
 
     cur = mysql.connection.cursor()
     cur.execute("""
-        INSERT INTO events (title, description, event_date, image_url, link_url, is_active) 
-        VALUES (%s, %s, %s, %s, %s, 1)
-    """, (title, description, event_date, img, link_url))
+        INSERT INTO events (title, description, event_date, image_url, link_url, category, is_active) 
+        VALUES (%s, %s, %s, %s, %s, %s, 1)
+    """, (title, description, event_date, img, link_url, category))
     mysql.connection.commit()
     cur.close()
     flash('Event created successfully.', 'success')
@@ -843,6 +903,7 @@ def admin_edit_event(id):
     description = request.form.get('description')
     event_date = request.form.get('event_date')
     link_url = request.form.get('link_url')
+    category = request.form.get('category', 'Campus Events')
     is_active = 1 if request.form.get('is_active') in ['1', 'on', True] else 0
     img = save_uploaded_file(request.files.get('image'))
 
@@ -850,15 +911,15 @@ def admin_edit_event(id):
     if img:
         cur.execute("""
             UPDATE events 
-            SET title=%s, description=%s, event_date=%s, image_url=%s, link_url=%s, is_active=%s 
+            SET title=%s, description=%s, event_date=%s, image_url=%s, link_url=%s, category=%s, is_active=%s 
             WHERE id=%s
-        """, (title, description, event_date, img, link_url, is_active, id))
+        """, (title, description, event_date, img, link_url, category, is_active, id))
     else:
         cur.execute("""
             UPDATE events 
-            SET title=%s, description=%s, event_date=%s, link_url=%s, is_active=%s 
+            SET title=%s, description=%s, event_date=%s, link_url=%s, category=%s, is_active=%s 
             WHERE id=%s
-        """, (title, description, event_date, link_url, is_active, id))
+        """, (title, description, event_date, link_url, category, is_active, id))
     mysql.connection.commit()
     cur.close()
     flash('Event updated successfully.', 'success')
@@ -1061,13 +1122,14 @@ def admin_create_club():
     name = request.form.get('name')
     details = request.form.get('details')
     link_url = request.form.get('link_url')
+    category = request.form.get('category', 'Student Organization')
     img_name = save_uploaded_file(request.files.get('image'))
 
     cur = mysql.connection.cursor()
     cur.execute("""
-        INSERT INTO clubs (name, details, image_url, link_url, is_active) 
-        VALUES (%s, %s, %s, %s, 1)
-    """, (name, details, img_name, link_url))
+        INSERT INTO clubs (name, details, image_url, link_url, category, is_active) 
+        VALUES (%s, %s, %s, %s, %s, 1)
+    """, (name, details, img_name, link_url, category))
     mysql.connection.commit()
     cur.close()
     flash('Club registered successfully.', 'success')
@@ -1079,6 +1141,7 @@ def admin_edit_club(id):
     name = request.form.get('name')
     details = request.form.get('details')
     link_url = request.form.get('link_url')
+    category = request.form.get('category', 'Student Organization')
     is_active = 1 if request.form.get('is_active') in ['1', 'on', True] else 0
     img_name = save_uploaded_file(request.files.get('image'))
 
@@ -1086,15 +1149,15 @@ def admin_edit_club(id):
     if img_name:
         cur.execute("""
             UPDATE clubs 
-            SET name=%s, details=%s, image_url=%s, link_url=%s, is_active=%s 
+            SET name=%s, details=%s, image_url=%s, link_url=%s, category=%s, is_active=%s 
             WHERE id=%s
-        """, (name, details, img_name, link_url, is_active, id))
+        """, (name, details, img_name, link_url, category, is_active, id))
     else:
         cur.execute("""
             UPDATE clubs 
-            SET name=%s, details=%s, link_url=%s, is_active=%s 
+            SET name=%s, details=%s, link_url=%s, category=%s, is_active=%s 
             WHERE id=%s
-        """, (name, details, link_url, is_active, id))
+        """, (name, details, link_url, category, is_active, id))
     mysql.connection.commit()
     cur.close()
     flash('Club updated successfully.', 'success')
@@ -1109,74 +1172,6 @@ def admin_delete_club(id):
     cur.close()
     flash('Club removed.', 'info')
     return redirect(url_for('admin_clubs'))
-
-# --- SPORTS CRUD ---
-@app.route('/admin/sports')
-@admin_required
-def admin_sports():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM sports ORDER BY id DESC")
-    sports_list = cur.fetchall()
-    cur.close()
-    return render_template('admin/sports.html', sports=sports_list)
-
-
-@app.route('/admin/sports/create', methods=['POST'])
-@admin_required
-def admin_create_sport():
-    title = request.form.get('title')
-    details = request.form.get('details')
-    link_url = request.form.get('link_url')
-    img = save_uploaded_file(request.files.get('image'))
-
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        INSERT INTO sports (title, details, image_url, link_url, is_active) 
-        VALUES (%s, %s, %s, %s, 1)
-    """, (title, details, img, link_url))
-    mysql.connection.commit()
-    cur.close()
-    flash('Sport created successfully.', 'success')
-    return redirect(url_for('admin_sports'))
-
-
-@app.route('/admin/sports/edit/<int:id>', methods=['POST'])
-@admin_required
-def admin_edit_sport(id):
-    title = request.form.get('title')
-    details = request.form.get('details')
-    link_url = request.form.get('link_url')
-    is_active = 1 if request.form.get('is_active') in ['1', 'on', True] else 0
-    img = save_uploaded_file(request.files.get('image'))
-
-    cur = mysql.connection.cursor()
-    if img:
-        cur.execute("""
-            UPDATE sports 
-            SET title=%s, details=%s, image_url=%s, link_url=%s, is_active=%s 
-            WHERE id=%s
-        """, (title, details, img, link_url, is_active, id))
-    else:
-        cur.execute("""
-            UPDATE sports 
-            SET title=%s, details=%s, link_url=%s, is_active=%s 
-            WHERE id=%s
-        """, (title, details, link_url, is_active, id))
-    mysql.connection.commit()
-    cur.close()
-    flash('Sport updated successfully.', 'success')
-    return redirect(url_for('admin_sports'))
-
-
-@app.route('/admin/sports/delete/<int:id>', methods=['POST'])
-@admin_required
-def admin_delete_sport(id):
-    cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM sports WHERE id = %s", (id,))
-    mysql.connection.commit()
-    cur.close()
-    flash('Sport removed.', 'info')
-    return redirect(url_for('admin_sports'))
 
 # --- NEWS CRUD ---
 @app.route('/admin/news')
@@ -1196,16 +1191,19 @@ def admin_create_news():
     content = request.form.get('content')
     author = request.form.get('author_name') or session.get('user_name', 'Admin')
     link_url = request.form.get('link_url')
+    category = request.form.get('category', 'General')
+    status = request.form.get('status', 'published')
+    publish_date = request.form.get('publish_date') or None
     img = save_uploaded_file(request.files.get('image'))
 
     cur = mysql.connection.cursor()
     cur.execute("""
-        INSERT INTO news (title, content, image_url, author_name, link_url, is_active) 
-        VALUES (%s, %s, %s, %s, %s, 1)
-    """, (title, content, img, author, link_url))
+        INSERT INTO news (title, content, image_url, author_name, link_url, category, status, publish_date, is_active) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (title, content, img, author, link_url, category, status, publish_date, 1 if status == 'published' else 0))
     mysql.connection.commit()
     cur.close()
-    flash('News bulletin published successfully.', 'success')
+    flash('News bulletin created successfully.', 'success')
     return redirect(url_for('admin_news'))
 
 
@@ -1216,22 +1214,25 @@ def admin_edit_news(id):
     content = request.form.get('content')
     author = request.form.get('author_name') or session.get('user_name', 'Admin')
     link_url = request.form.get('link_url')
-    is_active = 1 if request.form.get('is_active') in ['1', 'on', True] else 0
+    category = request.form.get('category', 'General')
+    status = request.form.get('status', 'published')
+    publish_date = request.form.get('publish_date') or None
+    is_active = 1 if status == 'published' else 0
     img = save_uploaded_file(request.files.get('image'))
 
     cur = mysql.connection.cursor()
     if img:
         cur.execute("""
             UPDATE news 
-            SET title=%s, content=%s, author_name=%s, link_url=%s, image_url=%s, is_active=%s 
+            SET title=%s, content=%s, author_name=%s, link_url=%s, image_url=%s, category=%s, status=%s, publish_date=%s, is_active=%s 
             WHERE id=%s
-        """, (title, content, author, link_url, img, is_active, id))
+        """, (title, content, author, link_url, img, category, status, publish_date, is_active, id))
     else:
         cur.execute("""
             UPDATE news 
-            SET title=%s, content=%s, author_name=%s, link_url=%s, is_active=%s 
+            SET title=%s, content=%s, author_name=%s, link_url=%s, category=%s, status=%s, publish_date=%s, is_active=%s 
             WHERE id=%s
-        """, (title, content, author, link_url, is_active, id))
+        """, (title, content, author, link_url, category, status, publish_date, is_active, id))
     mysql.connection.commit()
     cur.close()
     flash('News bulletin updated successfully.', 'success')
@@ -1267,15 +1268,16 @@ def admin_create_virtual_tour():
     raw_video_input = request.form.get('video_id')
     video_id = extract_youtube_id(raw_video_input)
     uploaded_file = save_uploaded_file(request.files.get('tour_file'))
+    category = request.form.get('category', 'Facilities')
 
     # Determine tour_type
     tour_type = 'FILE' if uploaded_file else ('EMBED' if ('http://' in raw_video_input or 'https://' in raw_video_input) and not video_id else 'YOUTUBE')
 
     cur = mysql.connection.cursor()
     cur.execute("""
-        INSERT INTO virtual_tours (title, description, video_id, file_url, tour_type, is_active)
-        VALUES (%s, %s, %s, %s, %s, 1)
-    """, (title, description, video_id if video_id else raw_video_input, uploaded_file, tour_type))
+        INSERT INTO virtual_tours (title, description, video_id, file_url, tour_type, category, is_active)
+        VALUES (%s, %s, %s, %s, %s, %s, 1)
+    """, (title, description, video_id if video_id else raw_video_input, uploaded_file, tour_type, category))
     mysql.connection.commit()
     cur.close()
     flash('Virtual tour entry saved successfully.', 'success')
@@ -1289,6 +1291,7 @@ def admin_edit_virtual_tour(id):
     description = request.form.get('description')
     raw_video_input = request.form.get('video_id')
     video_id = extract_youtube_id(raw_video_input)
+    category = request.form.get('category', 'Facilities')
     is_active = 1 if request.form.get('is_active') in ['1', 'on', True] else 0
     uploaded_file = save_uploaded_file(request.files.get('tour_file'))
 
@@ -1296,18 +1299,18 @@ def admin_edit_virtual_tour(id):
     if uploaded_file:
         cur.execute("""
             UPDATE virtual_tours 
-            SET title=%s, description=%s, file_url=%s, tour_type='FILE', is_active=%s 
+            SET title=%s, description=%s, file_url=%s, tour_type='FILE', category=%s, is_active=%s 
             WHERE id=%s
-        """, (title, description, uploaded_file, is_active, id))
+        """, (title, description, uploaded_file, category, is_active, id))
     else:
         # If text/link input provided
         link_val = video_id if video_id else raw_video_input
         tour_type = 'YOUTUBE' if len(link_val) == 11 and not ('/' in link_val) else ('EMBED' if link_val else 'FILE')
         cur.execute("""
             UPDATE virtual_tours 
-            SET title=%s, description=%s, video_id=%s, tour_type=%s, is_active=%s 
+            SET title=%s, description=%s, video_id=%s, tour_type=%s, category=%s, is_active=%s 
             WHERE id=%s
-        """, (title, description, link_val, tour_type, is_active, id))
+        """, (title, description, link_val, tour_type, category, is_active, id))
 
     mysql.connection.commit()
     cur.close()
@@ -1543,6 +1546,70 @@ def calendar_events():
         }
         events.append(ev)
     return jsonify(events)
+
+# ==================== EMERGENCY ADVISORIES ==================== #
+@app.context_processor
+def inject_emergency_advisories():
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM emergency_advisories WHERE is_active = 1 AND (expires_at IS NULL OR expires_at > NOW()) ORDER BY id DESC LIMIT 3")
+        advisories = cur.fetchall()
+        cur.close()
+        return {'active_advisories': advisories}
+    except Exception:
+        return {'active_advisories': []}
+
+@app.route('/admin/advisories')
+@admin_required
+def admin_advisories():
+    from datetime import datetime
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM emergency_advisories ORDER BY id DESC")
+    advisories = cur.fetchall()
+    cur.close()
+    now_str = datetime.now().strftime('%Y-%m-%dT%H:%M')
+    return render_template('admin/advisories.html', advisories=advisories, now_str=now_str)
+
+@app.route('/admin/advisories/create', methods=['POST'])
+@admin_required
+def admin_create_advisory():
+    title = request.form.get('title')
+    message = request.form.get('message')
+    advisory_type = request.form.get('advisory_type', 'info')
+    expires_at = request.form.get('expires_at') or None
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO emergency_advisories (title, message, advisory_type, is_active, expires_at) VALUES (%s, %s, %s, 1, %s)",
+                (title, message, advisory_type, expires_at))
+    mysql.connection.commit()
+    cur.close()
+    flash('Advisory created successfully.', 'success')
+    return redirect(url_for('admin_advisories'))
+
+@app.route('/admin/advisories/edit/<int:id>', methods=['POST'])
+@admin_required
+def admin_edit_advisory(id):
+    title = request.form.get('title')
+    message = request.form.get('message')
+    advisory_type = request.form.get('advisory_type', 'info')
+    is_active = 1 if request.form.get('is_active') in ['1', 'on', True] else 0
+    expires_at = request.form.get('expires_at') or None
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE emergency_advisories SET title=%s, message=%s, advisory_type=%s, is_active=%s, expires_at=%s WHERE id=%s",
+                (title, message, advisory_type, is_active, expires_at, id))
+    mysql.connection.commit()
+    cur.close()
+    flash('Advisory updated.', 'success')
+    return redirect(url_for('admin_advisories'))
+
+@app.route('/admin/advisories/delete/<int:id>', methods=['POST'])
+@admin_required
+def admin_delete_advisory(id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM emergency_advisories WHERE id = %s", (id,))
+    mysql.connection.commit()
+    cur.close()
+    flash('Advisory deleted.', 'info')
+    return redirect(url_for('admin_advisories'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

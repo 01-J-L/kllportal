@@ -1,16 +1,22 @@
 {% extends 'admin_layout.html' %}
 {% block content %}
 
-
-
 <!-- MAIN WHITE CARD -->
 <div class="admin-panel-card">
 
   <h2 class="admin-panel-title">News Management</h2>
 
-  <button type="button" class="btn-admin-green mb-3" data-bs-toggle="modal" data-bs-target="#createNewsModal">
-    CREATE NEWS BULLETIN
-  </button>
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <button type="button" class="btn-admin-green" data-bs-toggle="modal" data-bs-target="#createNewsModal">
+      CREATE NEWS BULLETIN
+    </button>
+    <div class="btn-group">
+      <button type="button" class="btn btn-sm btn-outline-primary active" onclick="filterNewsByStatus('all', this)">All</button>
+      <button type="button" class="btn btn-sm btn-outline-success" onclick="filterNewsByStatus('published', this)">Published</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="filterNewsByStatus('draft', this)">Drafts</button>
+      <button type="button" class="btn btn-sm btn-outline-warning" onclick="filterNewsByStatus('scheduled', this)">Scheduled</button>
+    </div>
+  </div>
 
   <div class="table-responsive">
     <table class="admin-data-table">
@@ -19,15 +25,14 @@
           <th>IMAGE</th>
           <th>TITLE</th>
           <th>AUTHOR</th>
-          <th>CONTENT</th>
-          <th>NEWS LINK</th>
-          <th class="text-center">IS ACTIVE</th>
+          <th>CATEGORY</th>
+          <th>STATUS</th>
           <th class="text-center">ACTION</th>
         </tr>
       </thead>
       <tbody>
         {% for item in news %}
-        <tr>
+        <tr data-news-status="{{ item.status }}">
           <td>
             {% if item.image_url %}
             <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}"
@@ -42,22 +47,18 @@
           </td>
           <td class="fw-bold">{{ item.title }}</td>
           <td>{{ item.author_name or 'Admin' }}</td>
-          <td class="text-muted" style="max-width: 240px;">
-            {{ item.content[:50] }}{% if item.content|length > 50 %}...{% endif %}
-          </td>
+          <td><span class="badge bg-info text-dark">{{ item.category or 'General' }}</span></td>
           <td>
-            {% if item.link_url %}
-              <a href="{{ item.link_url }}" target="_blank" class="badge bg-primary text-decoration-none">
-                <i class="fa fa-external-link-alt me-1"></i> Visit Link
-              </a>
+            {% if item.status == 'published' %}
+              <span class="badge bg-success">Published</span>
+            {% elif item.status == 'scheduled' %}
+              <span class="badge bg-warning text-dark">Scheduled</span>
+              {% if item.publish_date %}
+                <small class="d-block text-muted">{{ item.publish_date.strftime('%b %d, %Y %I:%M %p') }}</small>
+              {% endif %}
             {% else %}
-              <span class="text-muted small">None</span>
+              <span class="badge bg-secondary">Draft</span>
             {% endif %}
-          </td>
-          <td class="text-center">
-            <span class="badge {{ 'bg-success' if item.is_active else 'bg-secondary' }}">
-              {{ 'Active' if item.is_active else 'Inactive' }}
-            </span>
           </td>
           <td class="text-center" style="white-space: nowrap;">
             <button type="button" class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showNewsModal{{ item.id }}">
@@ -104,22 +105,38 @@
         </div>
         {% endif %}
         <div class="row g-3 mb-3">
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">AUTHOR</label>
             <div class="p-2 bg-light rounded border fw-bold">{{ item.author_name or 'Admin' }}</div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
+            <label class="form-label">CATEGORY</label>
+            <div class="p-2 bg-light rounded border">
+              <span class="badge bg-info text-dark">{{ item.category or 'General' }}</span>
+            </div>
+          </div>
+          <div class="col-md-4">
             <label class="form-label">STATUS</label>
             <div class="p-2 bg-light rounded border">
-              <span class="badge {{ 'bg-success' if item.is_active else 'bg-secondary' }}">
-                {{ 'Active' if item.is_active else 'Inactive' }}
-              </span>
+              {% if item.status == 'published' %}
+                <span class="badge bg-success">Published</span>
+              {% elif item.status == 'scheduled' %}
+                <span class="badge bg-warning text-dark">Scheduled</span>
+              {% else %}
+                <span class="badge bg-secondary">Draft</span>
+              {% endif %}
             </div>
           </div>
         </div>
+        {% if item.status == 'scheduled' and item.publish_date %}
+        <div class="mb-3">
+          <label class="form-label">SCHEDULED PUBLISH DATE</label>
+          <div class="p-2 bg-light rounded border fw-bold">{{ item.publish_date.strftime('%B %d, %Y at %I:%M %p') }}</div>
+        </div>
+        {% endif %}
         <div class="mb-3">
           <label class="form-label">ARTICLE CONTENT</label>
-          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.7;">{{ item.content }}</div>
+          <div class="p-3 bg-light rounded border" style="line-height: 1.7;">{{ item.content|safe }}</div>
         </div>
         <div>
           <label class="form-label">OFFICIAL LINK</label>
@@ -160,9 +177,34 @@
             <input type="text" name="author_name" class="form-control" value="{{ item.author_name or 'Admin' }}">
           </div>
 
+          <div class="col-md-6">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              {% for cat in ['General', 'Academic Advisory', 'Enrollment Notice', 'Student Life', 'Campus Events', 'Faculty News', 'Administrative Notice'] %}
+              <option value="{{ cat }}" {% if item.category == cat %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Publishing Status</label>
+            <select name="status" class="form-select" id="editStatus{{ item.id }}" onchange="togglePublishDate{{ item.id }}()">
+              <option value="draft" {% if item.status == 'draft' %}selected{% endif %}>Draft</option>
+              <option value="published" {% if item.status == 'published' %}selected{% endif %}>Published</option>
+              <option value="scheduled" {% if item.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+            </select>
+          </div>
+          <div class="col-md-12" id="editPublishDateWrap{{ item.id }}" style="{% if item.status != 'scheduled' %}display:none{% endif %}">
+            <label class="form-label">Schedule Publish Date &amp; Time</label>
+            <input type="datetime-local" name="publish_date" class="form-control"
+                   value="{{ item.publish_date.strftime('%Y-%m-%dT%H:%M') if item.publish_date else '' }}">
+          </div>
+
           <div class="col-12">
-            <label class="form-label">Article Content</label>
-            <textarea name="content" class="form-control" rows="5" required>{{ item.content }}</textarea>
+            <div class="cms-quill-wrapper">
+              <label class="form-label">Article Content</label>
+              <div id="quillEditorEdit{{ item.id }}"></div>
+              <input type="hidden" name="content" id="quillInputEdit{{ item.id }}" value="{{ item.content or '' }}">
+            </div>
           </div>
 
           <div class="col-12">
@@ -188,15 +230,6 @@
                  class="modal-thumbnail-preview"
                  alt="Preview">
           </div>
-
-          <div class="col-12">
-            <div class="form-check form-switch mt-2">
-              <input class="form-check-input" type="checkbox" name="is_active" id="activeNews{{ item.id }}" value="1" {% if item.is_active %}checked{% endif %}>
-              <label class="form-check-label fw-bold small text-dark" for="activeNews{{ item.id }}">
-                Is Active &amp; Published on Portal
-              </label>
-            </div>
-          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -206,6 +239,45 @@
     </form>
   </div>
 </div>
+
+<script>
+(function() {
+  var editor = new Quill('#quillEditorEdit{{ item.id }}', {
+    theme: 'snow',
+    placeholder: 'Write your article content...',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+  // Set initial content
+  var initialContent = document.getElementById('quillInputEdit{{ item.id }}').value;
+  if (initialContent) { editor.root.innerHTML = initialContent; }
+  // Sync before form submit
+  editor.on('text-change', function() {
+    document.getElementById('quillInputEdit{{ item.id }}').value = editor.root.innerHTML;
+  });
+  var form = document.getElementById('quillEditorEdit{{ item.id }}').closest('form');
+  if (form) {
+    form.addEventListener('submit', function() {
+      document.getElementById('quillInputEdit{{ item.id }}').value = editor.root.innerHTML;
+    });
+  }
+  // Toggle publish date visibility
+  window['togglePublishDate{{ item.id }}'] = function() {
+    var sel = document.getElementById('editStatus{{ item.id }}');
+    var wrap = document.getElementById('editPublishDateWrap{{ item.id }}');
+    wrap.style.display = sel.value === 'scheduled' ? '' : 'none';
+  };
+})();
+</script>
 
 {% endfor %}
 
@@ -227,9 +299,32 @@
             <label class="form-label">Author Name</label>
             <input type="text" name="author_name" class="form-control" placeholder="e.g. Office of the Registrar" value="{{ session.get('user_name', 'Admin') }}">
           </div>
+          <div class="col-md-6">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              {% for cat in ['General', 'Academic Advisory', 'Enrollment Notice', 'Student Life', 'Campus Events', 'Faculty News', 'Administrative Notice'] %}
+              <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Publishing Status</label>
+            <select name="status" class="form-select" id="createStatus" onchange="toggleCreatePublishDate()">
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+              <option value="scheduled">Scheduled</option>
+            </select>
+          </div>
+          <div class="col-md-12" id="createPublishDateWrap" style="display:none;">
+            <label class="form-label">Schedule Publish Date &amp; Time</label>
+            <input type="datetime-local" name="publish_date" class="form-control">
+          </div>
           <div class="col-12">
-            <label class="form-label">Article Content</label>
-            <textarea name="content" class="form-control" rows="5" placeholder="Enter complete bulletin details..." required></textarea>
+            <div class="cms-quill-wrapper">
+              <label class="form-label">Article Content</label>
+              <div id="quillEditorCreate"></div>
+              <input type="hidden" name="content" id="quillInputCreate">
+            </div>
           </div>
           <div class="col-12">
             <label class="form-label">Official Link (Optional)</label>
@@ -252,12 +347,53 @@
   </div>
 </div>
 
-<footer class="admin-canvas-footer mt-4">
-  <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
-  <div><a href="#">SchoolAdmin</a><a href="#">About Us</a></div>
-</footer>
-
 <script>
+// Create modal Quill editor
+document.addEventListener('DOMContentLoaded', function() {
+  var createEditor = new Quill('#quillEditorCreate', {
+    theme: 'snow',
+    placeholder: 'Write your article content...',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+  createEditor.on('text-change', function() {
+    document.getElementById('quillInputCreate').value = createEditor.root.innerHTML;
+  });
+  var createForm = document.querySelector('#createNewsModal form');
+  if (createForm) {
+    createForm.addEventListener('submit', function() {
+      document.getElementById('quillInputCreate').value = createEditor.root.innerHTML;
+    });
+  }
+});
+
+function toggleCreatePublishDate() {
+  var sel = document.getElementById('createStatus');
+  var wrap = document.getElementById('createPublishDateWrap');
+  wrap.style.display = sel.value === 'scheduled' ? '' : 'none';
+}
+
+function filterNewsByStatus(status, btn) {
+  document.querySelectorAll('.admin-data-table tbody tr').forEach(function(row) {
+    if (status === 'all' || row.getAttribute('data-news-status') === status) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+  document.querySelectorAll('.btn-group .btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
 function previewNewsImg(input, targetId) {
   if (input.files && input.files[0]) {
     var reader = new FileReader();
@@ -268,5 +404,10 @@ function previewNewsImg(input, targetId) {
   }
 }
 </script>
+
+<footer class="admin-canvas-footer mt-4">
+  <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
+  <div><a href="#">SchoolAdmin</a><a href="#">About Us</a></div>
+</footer>
 
 {% endblock %}

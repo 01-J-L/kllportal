@@ -11,20 +11,27 @@
 </head>
 <body class="portal-body d-flex flex-column min-vh-100">
 
-  <!-- ================= TOP BLACK CONTACT RIBBON (DYNAMIC) ================= -->
-  <div class="top-black-bar">
-    <div class="top-bar-left">
-      <span class="me-2"><i class="fa fa-phone me-1"></i> {{ top_phone }}</span>
-      <span class="top-bar-separator d-none d-sm-inline">| &nbsp;</span>
-      <span><i class="fa fa-envelope me-1"></i> {{ top_email }}</span>
-    </div>
-    <div class="top-bar-right">
-      {% if facebook_url and facebook_url != '#' %}<a href="{{ facebook_url }}" target="_blank"><i class="fab fa-facebook-f"></i></a>{% else %}<a href="#"><i class="fab fa-facebook-f"></i></a>{% endif %}
-      {% if twitter_url and twitter_url != '#' %}<a href="{{ twitter_url }}" target="_blank"><i class="fab fa-twitter"></i></a>{% else %}<a href="#"><i class="fab fa-twitter"></i></a>{% endif %}
-      {% if linkedin_url and linkedin_url != '#' %}<a href="{{ linkedin_url }}" target="_blank"><i class="fab fa-linkedin-in"></i></a>{% else %}<a href="#"><i class="fab fa-linkedin-in"></i></a>{% endif %}
-      {% if instagram_url and instagram_url != '#' %}<a href="{{ instagram_url }}" target="_blank"><i class="fab fa-instagram"></i></a>{% else %}<a href="#"><i class="fab fa-instagram"></i></a>{% endif %}
+  <!-- ================= EMERGENCY ADVISORY BANNER ================= -->
+  {% if active_advisories %}
+  <div id="advisoryBanner" class="advisory-banner">
+    <div class="advisory-banner-inner">
+      <div class="advisory-scroll-wrapper">
+        {% for adv in active_advisories %}
+        <span class="advisory-item advisory-{{ adv.advisory_type or 'info' }}">
+          <i class="fa fa-exclamation-circle me-1"></i>
+          <strong>{{ adv.title }}:</strong> {{ adv.message }}
+          {% if adv.expires_at %}
+            <span class="advisory-countdown">[ until {{ adv.expires_at.strftime('%b %d, %I:%M %p') }} ]</span>
+          {% endif %}
+        </span>
+        {% endfor %}
+      </div>
+      <button class="advisory-close-btn" onclick="document.getElementById('advisoryBanner').style.display='none'" title="Close">
+        <i class="fa fa-times"></i>
+      </button>
     </div>
   </div>
+  {% endif %}
 
   <!-- MAIN WHITE NAVBAR (Bootstrap Responsive) -->
   <header class="kll-home-nav navbar navbar-expand-lg sticky-top">
@@ -50,10 +57,8 @@
             Pages
           </a>
           <ul class="dropdown-menu shadow border-0" aria-labelledby="pagesDropdown">
-            <li><a class="dropdown-item py-2" href="{{ url_for('courses') }}"><i class="fa fa-book me-2 text-primary"></i> Courses &amp; Programs</a></li>
             <li><a class="dropdown-item py-2" href="{{ url_for('academic_calendar') }}"><i class="fa fa-calendar-days me-2 text-primary"></i> Academic Calendar</a></li>
             <li><a class="dropdown-item py-2" href="{{ url_for('clubs') }}"><i class="fa fa-users me-2 text-primary"></i> Clubs</a></li>
-            <li><a class="dropdown-item py-2" href="{{ url_for('sports') }}"><i class="fa fa-basketball-ball me-2 text-primary"></i> Sports</a></li>
             <li><a class="dropdown-item py-2" href="{{ url_for('events_gallery') }}"><i class="fa fa-trophy me-2 text-primary"></i> Events Gallery</a></li>
             <li><a class="dropdown-item py-2" href="{{ url_for('news') }}"><i class="fa fa-newspaper me-2 text-primary"></i> News</a></li>
             <li><a class="dropdown-item py-2" href="{{ url_for('virtual_tour') }}"><i class="fa fa-film me-2 text-primary"></i> Virtual Tour</a></li>
@@ -71,7 +76,6 @@
             <li><a class="dropdown-item py-2" href="{{ url_for('courses') }}"><i class="fa fa-book me-2 text-primary"></i> Courses &amp; Programs</a></li>
             <li><a class="dropdown-item py-2" href="{{ url_for('academic_calendar') }}"><i class="fa fa-calendar-days me-2 text-primary"></i> Academic Calendar</a></li>
             <li><a class="dropdown-item py-2" href="{{ url_for('clubs') }}"><i class="fa fa-users me-2 text-primary"></i> Clubs</a></li>
-            <li><a class="dropdown-item py-2" href="{{ url_for('sports') }}"><i class="fa fa-basketball-ball me-2 text-primary"></i> Sports</a></li>
             <li><a class="dropdown-item py-2" href="{{ url_for('events_gallery') }}"><i class="fa fa-trophy me-2 text-primary"></i> Events Gallery</a></li>
             <li><a class="dropdown-item py-2" href="{{ url_for('news') }}"><i class="fa fa-newspaper me-2 text-primary"></i> News</a></li>
             <li><a class="dropdown-item py-2" href="{{ url_for('virtual_tour') }}"><i class="fa fa-film me-2 text-primary"></i> Virtual Tour</a></li>

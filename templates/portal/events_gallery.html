@@ -6,8 +6,11 @@
   <h1 class="about-hero-title">EVENTS GALLERY PAGE</h1>
 
   <div class="gallery-search-box">
-    <select class="search-dropdown">
+    <select class="search-dropdown" id="galleryCategorySelect" onchange="filterGallery()">
       <option value="ALL">ALL &#9662;</option>
+      {% for cat in categories %}
+      <option value="{{ cat }}">{{ cat }}</option>
+      {% endfor %}
     </select>
     <input type="text" id="galleryKeywordInput" class="search-input" placeholder="Search Keyword">
     <button type="button" class="search-btn" onclick="filterGallery()">Search</button>
@@ -21,7 +24,7 @@
 
     {% if events %}
       {% for ev in events %}
-      <div class="col-lg-3 col-md-4 col-sm-6 gallery-item-col" data-title="{{ ev.title }}">
+      <div class="col-lg-3 col-md-4 col-sm-6 gallery-item-col" data-title="{{ ev.title }}" data-category="{{ ev.category or 'Campus Events' }}">
         <div class="event-poster-card d-flex flex-column justify-content-between h-100">
           <div>
             <div class="event-poster-img-wrap">
@@ -39,7 +42,7 @@
                 <i class="fa fa-calendar-alt me-1 text-primary"></i> 
                 {{ ev.event_date.strftime('%B %d, %Y') if ev.event_date else 'Campus Event' }}
               </p>
-              <p class="small text-muted mt-2 mb-0" style="white-space: pre-line;">{{ ev.description }}</p>
+              <div class="small text-muted mt-2 mb-0" style="line-height: 1.7;">{{ ev.description|safe }}</div>
             </div>
           </div>
 
@@ -75,15 +78,15 @@
 <script>
   function filterGallery() {
     const term = document.getElementById('galleryKeywordInput').value.toLowerCase().trim();
+    const category = document.getElementById('galleryCategorySelect').value;
     const items = document.querySelectorAll('.gallery-item-col');
     
     items.forEach(item => {
       const title = item.getAttribute('data-title').toLowerCase();
-      if (title.includes(term)) {
-        item.style.display = '';
-      } else {
-        item.style.display = 'none';
-      }
+      const itemCat = item.getAttribute('data-category');
+      const matchesCategory = category === 'ALL' || itemCat === category;
+      const matchesKeyword = title.includes(term);
+      item.style.display = (matchesCategory && matchesKeyword) ? '' : 'none';
     });
   }
 

@@ -18,6 +18,7 @@
         <tr>
           <th>FILE</th>
           <th>TITLE</th>
+          <th>CATEGORY</th>
           <th>DESCRIPTION</th>
           <th>FILE SIZE</th>
           <th class="text-center">IS ACTIVE</th>
@@ -33,6 +34,7 @@
             </a>
           </td>
           <td class="fw-bold">{{ hb.title }}</td>
+          <td><span class="badge bg-info text-dark">{{ hb.category or 'General' }}</span></td>
           <td class="text-muted" style="max-width: 280px;">{{ hb.description or 'Official Student Policy Document' }}</td>
           <td><span class="badge bg-light text-dark border">{{ hb.file_size|safe }}</span></td>
           <td class="text-center">
@@ -85,6 +87,12 @@
           <label class="form-label">DOCUMENT TITLE</label>
           <div class="p-2 bg-light rounded border fw-bold">{{ hb.title }}</div>
         </div>
+        <div class="mb-3">
+          <label class="form-label">CATEGORY</label>
+          <div class="p-2 bg-light rounded border">
+            <span class="badge bg-info text-dark">{{ hb.category or 'General' }}</span>
+          </div>
+        </div>
         {% if hb.description %}
         <div class="mb-3">
           <label class="form-label">SUMMARY / DESCRIPTION</label>
@@ -118,8 +126,15 @@
             <label class="form-label">Document Title</label>
             <input type="text" name="title" class="form-control" value="{{ hb.title }}" required>
           </div>
-
-          <div class="col-12">
+          <div class="col-md-6">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              {% for cat in ['General', 'Academic', 'Student Conduct', 'Policies', 'Guidelines', 'Forms', 'Other'] %}
+              <option value="{{ cat }}" {% if hb.category == cat %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
             <label class="form-label">Summary / Description (Optional)</label>
             <textarea name="description" class="form-control" rows="3">{{ hb.description or '' }}</textarea>
           </div>
@@ -164,7 +179,15 @@
             <label class="form-label">Handbook Title</label>
             <input type="text" name="title" class="form-control" placeholder="e.g. Code of Student Conduct & Discipline" required>
           </div>
-          <div class="col-12">
+          <div class="col-md-6">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              {% for cat in ['General', 'Academic', 'Student Conduct', 'Policies', 'Guidelines', 'Forms', 'Other'] %}
+              <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
             <label class="form-label">Summary / Description (Optional)</label>
             <textarea name="description" class="form-control" rows="3" placeholder="Brief summary of policies covered..."></textarea>
           </div>

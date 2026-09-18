@@ -59,7 +59,7 @@
             </form>
           </td>
         </tr>
-        {% endfor %}
+{% endfor %}
       </tbody>
     </table>
   </div>
@@ -159,22 +159,34 @@
 
           <div class="col-12">
             <label class="form-label">Overview / Description</label>
-            <textarea name="description" class="form-control" rows="3" required>{{ c.description }}</textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorEditCourse{{ c.id }}"></div>
+              <input type="hidden" name="description" id="quillInputEditCourse{{ c.id }}" value="{{ c.description or '' }}">
+            </div>
           </div>
 
           <div class="col-12">
             <label class="form-label">Curriculum Description</label>
-            <textarea name="curriculum_description" class="form-control" rows="3">{{ c.curriculum_description or '' }}</textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorEditCurriculum{{ c.id }}"></div>
+              <input type="hidden" name="curriculum_description" id="quillInputEditCurriculum{{ c.id }}" value="{{ c.curriculum_description or '' }}">
+            </div>
           </div>
 
           <div class="col-12">
             <label class="form-label">Program Objectives</label>
-            <textarea name="objectives" class="form-control" rows="3">{{ c.objectives or '' }}</textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorEditObjectives{{ c.id }}"></div>
+              <input type="hidden" name="objectives" id="quillInputEditObjectives{{ c.id }}" value="{{ c.objectives or '' }}">
+            </div>
           </div>
 
           <div class="col-12">
             <label class="form-label">Program Outcomes</label>
-            <textarea name="outcomes" class="form-control" rows="3">{{ c.outcomes or '' }}</textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorEditOutcomes{{ c.id }}"></div>
+              <input type="hidden" name="outcomes" id="quillInputEditOutcomes{{ c.id }}" value="{{ c.outcomes or '' }}">
+            </div>
           </div>
 
           <div class="col-12">
@@ -222,22 +234,34 @@
 
           <div class="col-12">
             <label class="form-label">Overview / Description</label>
-            <textarea name="description" class="form-control" rows="3" placeholder="Brief overview of the degree program..." required></textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorCreateCourse"></div>
+              <input type="hidden" name="description" id="quillInputCreateCourse">
+            </div>
           </div>
 
           <div class="col-12">
             <label class="form-label">Curriculum Description (Optional)</label>
-            <textarea name="curriculum_description" class="form-control" rows="3" placeholder="GE courses, core series, electives..."></textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorCreateCurriculum"></div>
+              <input type="hidden" name="curriculum_description" id="quillInputCreateCurriculum">
+            </div>
           </div>
 
           <div class="col-12">
             <label class="form-label">Program Objectives (Optional)</label>
-            <textarea name="objectives" class="form-control" rows="3" placeholder="Objectives of the graduates..."></textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorCreateObjectives"></div>
+              <input type="hidden" name="objectives" id="quillInputCreateObjectives">
+            </div>
           </div>
 
           <div class="col-12">
             <label class="form-label">Program Outcomes (Optional)</label>
-            <textarea name="outcomes" class="form-control" rows="3" placeholder="Measurable skills and outcomes..."></textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorCreateOutcomes"></div>
+              <input type="hidden" name="outcomes" id="quillInputCreateOutcomes">
+            </div>
           </div>
         </div>
       </div>
@@ -256,5 +280,78 @@
     <a href="#">About Us</a>
   </div>
 </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function initQuillCreate(id, placeholder) {
+    var editor = new Quill('#' + id, {
+      theme: 'snow',
+      placeholder: placeholder,
+      modules: {
+        toolbar: [
+          [{ 'header': [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'align': [] }],
+          ['link', 'image'],
+          ['clean']
+        ]
+      }
+    });
+    var inputId = id.replace('quillEditor', 'quillInput');
+    editor.on('text-change', function() {
+      document.getElementById(inputId).value = editor.root.innerHTML;
+    });
+    var form = document.getElementById(id).closest('form');
+    if (form) {
+      form.addEventListener('submit', function() {
+        document.getElementById(inputId).value = editor.root.innerHTML;
+      });
+    }
+  }
+  initQuillCreate('quillEditorCreateCourse', 'Brief overview of the degree program...');
+  initQuillCreate('quillEditorCreateCurriculum', 'GE courses, core series, electives...');
+  initQuillCreate('quillEditorCreateObjectives', 'Objectives of the graduates...');
+  initQuillCreate('quillEditorCreateOutcomes', 'Measurable skills and outcomes...');
+});
+</script>
+
+{% for c in courses %}
+<script>
+(function() {
+  function initQuillEdit(editorId, inputId, placeholder) {
+    var editor = new Quill('#' + editorId, {
+      theme: 'snow',
+      placeholder: placeholder,
+      modules: {
+        toolbar: [
+          [{ 'header': [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'align': [] }],
+          ['link', 'image'],
+          ['clean']
+        ]
+      }
+    });
+    var initialContent = document.getElementById(inputId).value;
+    if (initialContent) { editor.root.innerHTML = initialContent; }
+    editor.on('text-change', function() {
+      document.getElementById(inputId).value = editor.root.innerHTML;
+    });
+    var form = document.getElementById(editorId).closest('form');
+    if (form) {
+      form.addEventListener('submit', function() {
+        document.getElementById(inputId).value = editor.root.innerHTML;
+      });
+    }
+  }
+  initQuillEdit('quillEditorEditCourse{{ c.id }}', 'quillInputEditCourse{{ c.id }}', 'Course overview...');
+  initQuillEdit('quillEditorEditCurriculum{{ c.id }}', 'quillInputEditCurriculum{{ c.id }}', 'Curriculum description...');
+  initQuillEdit('quillEditorEditObjectives{{ c.id }}', 'quillInputEditObjectives{{ c.id }}', 'Program objectives...');
+  initQuillEdit('quillEditorEditOutcomes{{ c.id }}', 'quillInputEditOutcomes{{ c.id }}', 'Program outcomes...');
+})();
+</script>
+{% endfor %}
 
 {% endblock %}

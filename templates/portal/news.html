@@ -6,8 +6,15 @@
   <h1 class="about-hero-title">NEWS</h1>
 
   <div class="gallery-search-box">
-    <select class="search-dropdown">
-      <option value="ALL">ALL &#9662;</option>
+    <select class="search-dropdown" id="newsCategoryFilter" onchange="filterNews()">
+      <option value="ALL">ALL CATEGORIES &#9662;</option>
+      <option value="General">General</option>
+      <option value="Academic Advisory">Academic Advisory</option>
+      <option value="Enrollment Notice">Enrollment Notice</option>
+      <option value="Student Life">Student Life</option>
+      <option value="Campus Events">Campus Events</option>
+      <option value="Faculty News">Faculty News</option>
+      <option value="Administrative Notice">Administrative Notice</option>
     </select>
     <input type="text" id="newsSearchInput" class="search-input" placeholder="Search Keyword">
     <button type="button" class="search-btn" onclick="filterNews()">Search</button>
@@ -21,7 +28,7 @@
   <div id="dynamicNewsContainer">
     {% if news %}
       {% for item in news %}
-      <div class="generic-news-card news-search-item" data-title="{{ item.title }}">
+      <div class="generic-news-card news-search-item" data-title="{{ item.title }}" data-category="{{ item.category or 'General' }}">
         
         <!-- CLICKABLE IMAGE: Opens Pop-out Modal with Definition -->
         {% if item.image_url %}
@@ -40,9 +47,10 @@
           <div class="generic-news-meta">
             <i class="fa fa-user me-1 text-primary"></i> By {{ item.author_name or 'Admin' }} &bull; 
             <i class="fa fa-calendar-alt ms-2 me-1 text-primary"></i> {{ item.created_at.strftime('%B %d, %Y') if item.created_at else 'Recent' }}
+            {% if item.category %} &bull; <span class="badge bg-info text-dark ms-1">{{ item.category }}</span>{% endif %}
           </div>
           
-          <p class="text-muted mb-3" style="line-height: 1.7; white-space: pre-line;">{{ item.content }}</p>
+          <div class="text-muted mb-3" style="line-height: 1.7;">{{ item.content|safe }}</div>
 
           <div class="d-flex flex-wrap gap-2 pt-2 border-top">
             {% if item.image_url %}
@@ -88,9 +96,9 @@
                 </div>
                 
                 <h6 class="fw-bold text-dark mb-2">ARTICLE DEFINITION &amp; DETAILS</h6>
-                <p class="text-secondary mb-0" style="line-height: 1.8; white-space: pre-line; font-size: 0.95rem;">
-                  {{ item.content }}
-                </p>
+                <div class="text-secondary mb-0" style="line-height: 1.8; font-size: 0.95rem;">
+                  {{ item.content|safe }}
+                </div>
 
                 {% if item.link_url %}
                 <div class="mt-4 pt-3 border-top">
@@ -129,11 +137,16 @@
 <script>
   function filterNews() {
     const term = document.getElementById('newsSearchInput').value.toLowerCase().trim();
+    const category = document.getElementById('newsCategoryFilter').value;
     const items = document.querySelectorAll('.news-search-item');
 
     items.forEach(item => {
       const title = item.getAttribute('data-title').toLowerCase();
-      if (title.includes(term)) {
+      const itemCategory = item.getAttribute('data-category');
+      const matchesSearch = title.includes(term);
+      const matchesCategory = category === 'ALL' || itemCategory === category;
+
+      if (matchesSearch && matchesCategory) {
         item.style.display = '';
       } else {
         item.style.display = 'none';

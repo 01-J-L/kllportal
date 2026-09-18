@@ -23,8 +23,8 @@
       <div class="col-md-{{ 6 if about_sections|length <= 2 else 4 }} col-sm-12">
         <div class="about-block p-4 bg-white rounded shadow-sm border h-100">
           <h3 class="fw-bold text-uppercase" style="font-size: 1.25rem; color: #1e60d5;">{{ sec.title }}</h3>
-          <p class="text-muted mb-0" style="white-space: pre-line; line-height: 1.7; font-size: 0.92rem;">
-            {{ sec.body }}
+          <p class="text-muted mb-0" style="line-height: 1.7; font-size: 0.92rem;">
+            {{ sec.body|safe }}
           </p>
         </div>
       </div>

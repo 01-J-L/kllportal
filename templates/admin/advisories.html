@@ -1,0 +1,165 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+<div class="admin-panel-card">
+  <h2 class="admin-panel-title">Emergency Advisories &amp; Notices</h2>
+  <p class="text-muted small mb-3">Post urgent announcements (typhoon suspensions, enrollment extensions, etc.) that appear as a banner on all public pages. Set an expiry time to auto-remove the banner.</p>
+
+  <button type="button" class="btn-admin-green mb-3" data-bs-toggle="modal" data-bs-target="#createAdvisoryModal">
+    CREATE ADVISORY
+  </button>
+
+  <div class="table-responsive">
+    <table class="admin-data-table">
+      <thead>
+        <tr>
+          <th>TYPE</th>
+          <th>TITLE</th>
+          <th>MESSAGE</th>
+          <th>EXPIRES</th>
+          <th class="text-center">ACTIVE</th>
+          <th class="text-center">ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for adv in advisories %}
+        <tr>
+          <td>
+            {% if adv.advisory_type == 'danger' %}
+              <span class="badge bg-danger">URGENT</span>
+            {% elif adv.advisory_type == 'warning' %}
+              <span class="badge bg-warning text-dark">WARNING</span>
+            {% else %}
+              <span class="badge bg-info">INFO</span>
+            {% endif %}
+          </td>
+          <td class="fw-bold">{{ adv.title }}</td>
+          <td class="text-muted" style="max-width: 250px;">{{ adv.message[:60] }}{% if adv.message|length > 60 %}...{% endif %}</td>
+          <td style="white-space: nowrap;">
+            {% if adv.expires_at %}
+              {% if adv.expires_at.strftime('%Y-%m-%dT%H:%M') > now_str %}
+                <span class="badge bg-success">
+                  <i class="fa fa-clock me-1"></i>{{ adv.expires_at.strftime('%b %d, %Y %I:%M %p') }}
+                </span>
+              {% else %}
+                <span class="badge bg-secondary">Expired</span>
+              {% endif %}
+            {% else %}
+              <span class="text-muted small">No expiry</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <span class="badge {{ 'bg-success' if adv.is_active else 'bg-secondary' }}">
+              {{ 'Active' if adv.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="text-center" style="white-space: nowrap;">
+            <button type="button" class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editAdvisoryModal{{ adv.id }}">
+              EDIT
+            </button>
+            <form action="{{ url_for('admin_delete_advisory', id=adv.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this advisory?');">
+              <button class="btn-tbl-delete" type="submit">DELETE</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% for adv in advisories %}
+<div class="modal fade" id="editAdvisoryModal{{ adv.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_edit_advisory', id=adv.id) }}" method="POST">
+      <div class="modal-header modal-header-edit">
+        <h5 class="modal-title fw-bold"><i class="fa fa-pen me-2"></i>Edit Advisory</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">Title</label>
+            <input type="text" name="title" class="form-control" value="{{ adv.title }}" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Type</label>
+            <select name="advisory_type" class="form-select">
+              <option value="info" {% if adv.advisory_type == 'info' %}selected{% endif %}>Info</option>
+              <option value="warning" {% if adv.advisory_type == 'warning' %}selected{% endif %}>Warning</option>
+              <option value="danger" {% if adv.advisory_type == 'danger' %}selected{% endif %}>Urgent / Danger</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control" rows="3" required>{{ adv.message }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Expiry Date &amp; Time</label>
+            <input type="datetime-local" name="expires_at" class="form-control"
+                   value="{{ adv.expires_at.strftime('%Y-%m-%dT%H:%M') if adv.expires_at else '' }}">
+            <small class="text-muted">Leave blank for no expiry (stays until manually removed).</small>
+          </div>
+          <div class="col-md-6">
+            <div class="form-check form-switch mt-4">
+              <input class="form-check-input" type="checkbox" name="is_active" id="activeAdv{{ adv.id }}" value="1" {% if adv.is_active %}checked{% endif %}>
+              <label class="form-check-label fw-bold small text-dark" for="activeAdv{{ adv.id }}">Active &amp; Display on Portal</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-modal-save">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+<div class="modal fade" id="createAdvisoryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form class="modal-content" action="{{ url_for('admin_create_advisory') }}" method="POST">
+      <div class="modal-header modal-header-create">
+        <h5 class="modal-title fw-bold"><i class="fa fa-plus-circle me-2"></i>Create Advisory</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">Title</label>
+            <input type="text" name="title" class="form-control" placeholder="e.g. Typhoon Class Suspension" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Type</label>
+            <select name="advisory_type" class="form-select">
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="danger">Urgent / Danger</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control" rows="3" placeholder="Details of the advisory..." required></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Expiry Date &amp; Time</label>
+            <input type="datetime-local" name="expires_at" class="form-control">
+            <small class="text-muted">When should this advisory stop showing? Leave blank to keep it until manually removed.</small>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-admin-green m-0">Publish Advisory</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer class="admin-canvas-footer mt-4">
+  <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
+  <div><a href="#">SchoolAdmin</a><a href="#">About Us</a></div>
+</footer>
+
+{% endblock %}

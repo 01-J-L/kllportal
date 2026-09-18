@@ -6,8 +6,11 @@
   <h1 class="about-hero-title">STUDENT HANDBOOK</h1>
 
   <div class="gallery-search-box">
-    <select class="search-dropdown">
+    <select class="search-dropdown" id="handbookCategorySelect" onchange="filterHandbook()">
       <option value="ALL">ALL &#9662;</option>
+      {% for cat in categories %}
+      <option value="{{ cat }}">{{ cat }}</option>
+      {% endfor %}
     </select>
     <input type="text" id="handbookSearchInput" class="search-input" placeholder="Search Keyword">
     <button type="button" class="search-btn" onclick="filterHandbook()">Search</button>
@@ -21,7 +24,7 @@
 
     {% if handbooks %}
       {% for hb in handbooks %}
-      <div class="col-lg-3 col-md-4 col-sm-6 handbook-item-col" data-title="{{ hb.title }}">
+      <div class="col-lg-3 col-md-4 col-sm-6 handbook-item-col" data-title="{{ hb.title }}" data-category="{{ hb.category or 'General' }}">
         <div class="pdf-doc-card">
           
           <!-- Adobe Document Glyph Icon -->
@@ -62,15 +65,15 @@
 <script>
   function filterHandbook() {
     const term = document.getElementById('handbookSearchInput').value.toLowerCase().trim();
+    const category = document.getElementById('handbookCategorySelect').value;
     const items = document.querySelectorAll('.handbook-item-col');
 
     items.forEach(item => {
       const title = item.getAttribute('data-title').toLowerCase();
-      if (title.includes(term)) {
-        item.style.display = '';
-      } else {
-        item.style.display = 'none';
-      }
+      const itemCat = item.getAttribute('data-category');
+      const matchesCategory = category === 'ALL' || itemCat === category;
+      const matchesKeyword = title.includes(term);
+      item.style.display = (matchesCategory && matchesKeyword) ? '' : 'none';
     });
   }
 

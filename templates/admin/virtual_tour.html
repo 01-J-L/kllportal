@@ -17,6 +17,7 @@
       <thead>
         <tr>
           <th>TITLE</th>
+          <th>CATEGORY</th>
           <th>DESCRIPTION</th>
           <th>MEDIA SOURCE</th>
           <th class="text-center">TYPE</th>
@@ -28,6 +29,7 @@
         {% for t in tours %}
         <tr>
           <td class="fw-bold">{{ t.title }}</td>
+          <td><span class="badge bg-info text-dark">{{ t.category or 'Facilities' }}</span></td>
           <td class="text-muted" style="max-width: 280px;">{{ t.description[:60] }}{% if t.description|length > 60 %}...{% endif %}</td>
           <td>
             {% if t.file_url %}
@@ -106,13 +108,19 @@
         </div>
 
         <div class="row g-3">
-          <div class="col-md-6">
+          <div class="col-md-4">
+            <label class="form-label">CATEGORY</label>
+            <div class="p-2 bg-light rounded border">
+              <span class="badge bg-info text-dark">{{ t.category or 'Facilities' }}</span>
+            </div>
+          </div>
+          <div class="col-md-4">
             <label class="form-label">MEDIA SOURCE</label>
             <div class="p-2 bg-light rounded border">
               <code>{{ t.file_url or t.video_id }}</code>
             </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">STATUS</label>
             <div class="p-2 bg-light rounded border">
               <span class="badge {{ 'bg-success' if t.is_active else 'bg-secondary' }} fs-6">
@@ -143,10 +151,20 @@
             <label class="form-label">Tour Title</label>
             <input type="text" name="title" class="form-control" value="{{ t.title }}" required>
           </div>
-
-          <div class="col-12">
+          <div class="col-md-6">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              {% for cat in ['Facilities', 'Campus Tour', 'Laboratory', 'Library', 'Classroom', 'Sports Complex', 'Other'] %}
+              <option value="{{ cat }}" {% if t.category == cat %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
             <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="3" required>{{ t.description }}</textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorEditTour{{ t.id }}"></div>
+              <input type="hidden" name="description" id="quillInputEditTour{{ t.id }}" value="{{ t.description or '' }}">
+            </div>
           </div>
 
           <div class="col-md-6">
@@ -198,9 +216,20 @@
             <label class="form-label">Tour Title</label>
             <input type="text" name="title" class="form-control" placeholder="e.g. IT Computer Laboratory 360 View" required>
           </div>
-          <div class="col-12">
+          <div class="col-md-6">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              {% for cat in ['Facilities', 'Campus Tour', 'Laboratory', 'Library', 'Classroom', 'Sports Complex', 'Other'] %}
+              <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
             <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="3" placeholder="Overview of the facility or presentation..." required></textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorCreateTour"></div>
+              <input type="hidden" name="description" id="quillInputCreateTour">
+            </div>
           </div>
 
           <div class="col-md-6">
@@ -228,5 +257,65 @@
   <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
   <div><a href="#">SchoolAdmin</a><a href="#">About Us</a></div>
 </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var createTourEditor = new Quill('#quillEditorCreateTour', {
+    theme: 'snow',
+    placeholder: 'Overview of the facility or presentation...',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+  createTourEditor.on('text-change', function() {
+    document.getElementById('quillInputCreateTour').value = createTourEditor.root.innerHTML;
+  });
+  var createForm = document.querySelector('#createTourModal form');
+  if (createForm) {
+    createForm.addEventListener('submit', function() {
+      document.getElementById('quillInputCreateTour').value = createTourEditor.root.innerHTML;
+    });
+  }
+});
+</script>
+
+{% for t in tours %}
+<script>
+(function() {
+  var editor = new Quill('#quillEditorEditTour{{ t.id }}', {
+    theme: 'snow',
+    placeholder: 'Tour description...',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+  var initialContent = document.getElementById('quillInputEditTour{{ t.id }}').value;
+  if (initialContent) { editor.root.innerHTML = initialContent; }
+  editor.on('text-change', function() {
+    document.getElementById('quillInputEditTour{{ t.id }}').value = editor.root.innerHTML;
+  });
+  var form = document.getElementById('quillEditorEditTour{{ t.id }}').closest('form');
+  if (form) {
+    form.addEventListener('submit', function() {
+      document.getElementById('quillInputEditTour{{ t.id }}').value = editor.root.innerHTML;
+    });
+  }
+})();
+</script>
+{% endfor %}
 
 {% endblock %}

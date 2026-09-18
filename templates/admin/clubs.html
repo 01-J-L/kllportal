@@ -18,6 +18,7 @@
         <tr>
           <th>IMAGE</th>
           <th>NAME</th>
+          <th>CATEGORY</th>
           <th>DETAILS</th>
           <th>CLUB LINK</th>
           <th class="text-center">IS ACTIVE</th>
@@ -40,6 +41,7 @@
             {% endif %}
           </td>
           <td class="fw-bold">{{ club.name }}</td>
+          <td><span class="badge bg-info text-dark">{{ club.category or 'Student Organization' }}</span></td>
           <td class="text-muted" style="max-width: 250px;">{{ club.details[:50] }}{% if club.details|length > 50 %}...{% endif %}</td>
           <td>
             {% if club.link_url %}
@@ -104,7 +106,13 @@
           <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.6;">{{ club.details }}</div>
         </div>
         <div class="row g-3">
-          <div class="col-md-6">
+          <div class="col-md-4">
+            <label class="form-label">CATEGORY</label>
+            <div class="p-2 bg-light rounded border">
+              <span class="badge bg-info text-dark">{{ club.category or 'Student Organization' }}</span>
+            </div>
+          </div>
+          <div class="col-md-4">
             <label class="form-label">EXTERNAL / REGISTRATION LINK</label>
             <div class="p-2 bg-light rounded border">
               {% if club.link_url %}
@@ -116,7 +124,7 @@
               {% endif %}
             </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">STATUS</label>
             <div class="p-2 bg-light rounded border">
               <span class="badge {{ 'bg-success' if club.is_active else 'bg-secondary' }}">
@@ -147,10 +155,20 @@
             <label class="form-label">Club Name</label>
             <input type="text" name="name" class="form-control" value="{{ club.name }}" required>
           </div>
-
-          <div class="col-12">
+          <div class="col-md-6">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              {% for cat in ['Student Organization', 'Academic Club', 'Sports Club', 'Cultural Club', 'Technical Club', 'Community Service', 'Other'] %}
+              <option value="{{ cat }}" {% if club.category == cat %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
             <label class="form-label">Club Details &amp; Meeting Schedules</label>
-            <textarea name="details" class="form-control" rows="4" required>{{ club.details }}</textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorEditClub{{ club.id }}"></div>
+              <input type="hidden" name="details" id="quillInputEditClub{{ club.id }}" value="{{ club.details or '' }}">
+            </div>
           </div>
 
           <!-- EDIT / ADD / REMOVE LINK INPUT -->
@@ -213,9 +231,20 @@
             <label class="form-label">Club Name</label>
             <input type="text" name="name" class="form-control" placeholder="e.g. The CPU (Computer Professional Union)" required>
           </div>
-          <div class="col-12">
+          <div class="col-md-6">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              {% for cat in ['Student Organization', 'Academic Club', 'Sports Club', 'Cultural Club', 'Technical Club', 'Community Service', 'Other'] %}
+              <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
             <label class="form-label">Club Details / Announcements</label>
-            <textarea name="details" class="form-control" rows="4" placeholder="Enter meeting schedules and mission..." required></textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorCreateClub"></div>
+              <input type="hidden" name="details" id="quillInputCreateClub">
+            </div>
           </div>
           <div class="col-12">
             <label class="form-label">Club Official Link (Optional)</label>
@@ -247,6 +276,32 @@
 </footer>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+  var createClubEditor = new Quill('#quillEditorCreateClub', {
+    theme: 'snow',
+    placeholder: 'Enter meeting schedules and mission...',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+  createClubEditor.on('text-change', function() {
+    document.getElementById('quillInputCreateClub').value = createClubEditor.root.innerHTML;
+  });
+  var createForm = document.querySelector('#createClubModal form');
+  if (createForm) {
+    createForm.addEventListener('submit', function() {
+      document.getElementById('quillInputCreateClub').value = createClubEditor.root.innerHTML;
+    });
+  }
+});
+
 function previewClubImage(input, targetId) {
   if (input.files && input.files[0]) {
     var reader = new FileReader();
@@ -257,5 +312,37 @@ function previewClubImage(input, targetId) {
   }
 }
 </script>
+
+{% for club in clubs %}
+<script>
+(function() {
+  var editor = new Quill('#quillEditorEditClub{{ club.id }}', {
+    theme: 'snow',
+    placeholder: 'Club details...',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+  var initialContent = document.getElementById('quillInputEditClub{{ club.id }}').value;
+  if (initialContent) { editor.root.innerHTML = initialContent; }
+  editor.on('text-change', function() {
+    document.getElementById('quillInputEditClub{{ club.id }}').value = editor.root.innerHTML;
+  });
+  var form = document.getElementById('quillEditorEditClub{{ club.id }}').closest('form');
+  if (form) {
+    form.addEventListener('submit', function() {
+      document.getElementById('quillInputEditClub{{ club.id }}').value = editor.root.innerHTML;
+    });
+  }
+})();
+</script>
+{% endfor %}
 
 {% endblock %}

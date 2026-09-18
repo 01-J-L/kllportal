@@ -27,7 +27,7 @@
         </div>
         <div>
           <small class="text-muted fw-bold">DESCRIPTION</small>
-          <p id="eventDetailDesc" class="mb-0" style="white-space: pre-line;">No description available.</p>
+          <div id="eventDetailDesc" class="mb-0" style="line-height: 1.7;">No description available.</div>
         </div>
       </div>
       <div class="modal-footer">
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       document.getElementById('eventDetailLabel').textContent = title;
       document.getElementById('eventDetailDate').textContent = dateStr;
-      document.getElementById('eventDetailDesc').textContent = description;
+      document.getElementById('eventDetailDesc').innerHTML = description;
 
       var modal = new bootstrap.Modal(document.getElementById('eventDetailModal'));
       modal.show();

@@ -18,6 +18,7 @@
         <tr>
           <th>IMAGE</th>
           <th>TITLE</th>
+          <th>CATEGORY</th>
           <th>DESCRIPTION</th>
           <th>EVENT DATE</th>
           <th>EVENT LINK</th>
@@ -41,6 +42,7 @@
             {% endif %}
           </td>
           <td class="fw-bold">{{ ev.title }}</td>
+          <td><span class="badge bg-info text-dark">{{ ev.category or 'Campus Events' }}</span></td>
           <td class="text-muted" style="max-width: 250px;">{{ ev.description[:55] }}{% if ev.description|length > 55 %}...{% endif %}</td>
           <td style="white-space: nowrap;">{{ ev.event_date.strftime('%b %d, %Y %I:%M %p') if ev.event_date else 'TBD' }}</td>
           <td>
@@ -108,12 +110,18 @@
               {{ ev.event_date.strftime('%B %d, %Y at %I:%M %p') if ev.event_date else 'TBD' }}
             </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">STATUS</label>
             <div class="p-2 bg-light rounded border">
               <span class="badge {{ 'bg-success' if ev.is_active else 'bg-secondary' }}">
                 {{ 'Active' if ev.is_active else 'Inactive' }}
               </span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">CATEGORY</label>
+            <div class="p-2 bg-light rounded border">
+              <span class="badge bg-info text-dark">{{ ev.category or 'Campus Events' }}</span>
             </div>
           </div>
         </div>
@@ -160,10 +168,21 @@
             <input type="datetime-local" name="event_date" class="form-control"
                    value="{{ ev.event_date.strftime('%Y-%m-%dT%H:%M') if ev.event_date else '' }}" required>
           </div>
+          <div class="col-md-7">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              {% for cat in ['Campus Events', 'Academic', 'Student Life', 'Sports', 'Club Activity', 'Administrative', 'Other'] %}
+              <option value="{{ cat }}" {% if ev.category == cat %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
 
           <div class="col-12">
             <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="4" required>{{ ev.description }}</textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorEditEvent{{ ev.id }}"></div>
+              <input type="hidden" name="description" id="quillInputEditEvent{{ ev.id }}" value="{{ ev.description or '' }}">
+            </div>
           </div>
 
           <div class="col-12">
@@ -228,9 +247,20 @@
             <label class="form-label">Date &amp; Time</label>
             <input type="datetime-local" name="event_date" class="form-control" required>
           </div>
+          <div class="col-md-7">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              {% for cat in ['Campus Events', 'Academic', 'Student Life', 'Sports', 'Club Activity', 'Administrative', 'Other'] %}
+              <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
           <div class="col-12">
             <label class="form-label">Description</label>
-            <textarea name="description" class="form-control" rows="4" placeholder="Schedule details, guidelines, venue..." required></textarea>
+            <div class="cms-quill-wrapper">
+              <div id="quillEditorCreateEvent"></div>
+              <input type="hidden" name="description" id="quillInputCreateEvent">
+            </div>
           </div>
           <div class="col-12">
             <label class="form-label">Event Link (Optional)</label>
@@ -259,6 +289,33 @@
 </footer>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize Quill for create event modal
+  var createEventEditor = new Quill('#quillEditorCreateEvent', {
+    theme: 'snow',
+    placeholder: 'Schedule details, guidelines, venue...',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+  createEventEditor.on('text-change', function() {
+    document.getElementById('quillInputCreateEvent').value = createEventEditor.root.innerHTML;
+  });
+  var createForm = document.querySelector('#createEventModal form');
+  if (createForm) {
+    createForm.addEventListener('submit', function() {
+      document.getElementById('quillInputCreateEvent').value = createEventEditor.root.innerHTML;
+    });
+  }
+});
+
 function previewEvImg(input, targetId) {
   if (input.files && input.files[0]) {
     var reader = new FileReader();
@@ -269,5 +326,37 @@ function previewEvImg(input, targetId) {
   }
 }
 </script>
+
+{% for ev in events %}
+<script>
+(function() {
+  var editor = new Quill('#quillEditorEditEvent{{ ev.id }}', {
+    theme: 'snow',
+    placeholder: 'Event description...',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    }
+  });
+  var initialContent = document.getElementById('quillInputEditEvent{{ ev.id }}').value;
+  if (initialContent) { editor.root.innerHTML = initialContent; }
+  editor.on('text-change', function() {
+    document.getElementById('quillInputEditEvent{{ ev.id }}').value = editor.root.innerHTML;
+  });
+  var form = document.getElementById('quillEditorEditEvent{{ ev.id }}').closest('form');
+  if (form) {
+    form.addEventListener('submit', function() {
+      document.getElementById('quillInputEditEvent{{ ev.id }}').value = editor.root.innerHTML;
+    });
+  }
+})();
+</script>
+{% endfor %}
 
 {% endblock %}
