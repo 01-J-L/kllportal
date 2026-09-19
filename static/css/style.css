@@ -2672,8 +2672,9 @@ body.portal-body {
     padding: 8px 12px;
   }
   .advisory-item {
-    font-size: 0.82rem;
-    padding: 0 20px;
+    font-size: 0.78rem;
+    padding: 4px 14px;
+    margin: 0 4px;
   }
 
   /* --- GENERIC CARDS --- */
@@ -3052,12 +3053,13 @@ body.portal-body {
 
   /* --- ADVISORY BANNER --- */
   .advisory-banner-inner {
-    padding: 8px 10px;
-    gap: 8px;
+    padding: 10px 15px;
+    gap: 10px;
   }
   .advisory-item {
-    font-size: 0.78rem;
-    padding: 0 15px;
+    font-size: 0.8rem;
+    padding: 4px 18px;
+    margin: 0 5px;
   }
   .advisory-countdown {
     display: block;
@@ -3291,7 +3293,8 @@ body.portal-body {
   /* --- ADVISORY BANNER --- */
   .advisory-item {
     font-size: 0.72rem;
-    padding: 0 12px;
+    padding: 3px 10px;
+    margin: 0 3px;
   }
   .advisory-close-btn {
     width: 24px;
@@ -3336,16 +3339,28 @@ body.portal-body {
 
 /* ==================== EMERGENCY ADVISORY BANNER ==================== */
 .advisory-banner {
-  background: linear-gradient(135deg, #dc3545, #a71d2a);
   color: #fff;
   z-index: 1050;
   position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.advisory-banner:has(.advisory-danger) {
+  background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+}
+.advisory-banner:has(.advisory-warning) {
+  background: linear-gradient(135deg, #f0ad4e 0%, #d9961d 100%);
+  color: #1a1a1a;
+}
+.advisory-banner:has(.advisory-info) {
+  background: linear-gradient(135deg, #198754 0%, #146c43 100%);
 }
 .advisory-banner-inner {
   display: flex;
   align-items: center;
-  padding: 8px 15px;
-  gap: 10px;
+  padding: 10px 20px;
+  gap: 12px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 .advisory-scroll-wrapper {
   flex: 1;
@@ -3355,47 +3370,61 @@ body.portal-body {
 }
 .advisory-item {
   display: inline-block;
-  padding: 0 30px;
-  font-size: 0.88rem;
-  font-weight: 500;
-  animation: advisoryScroll 20s linear infinite;
+  padding: 5px 24px;
+  margin: 0 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 20px;
+  animation: advisoryScroll 25s linear infinite;
+  backdrop-filter: blur(4px);
 }
 .advisory-item:first-child {
-  padding-left: 0;
+  padding-left: 24px;
+  margin-left: 0;
 }
 .advisory-danger {
+  background: rgba(255,255,255,0.18);
   color: #fff;
+  border: 1px solid rgba(255,255,255,0.25);
 }
 .advisory-warning {
-  color: #fff3cd;
+  background: rgba(0,0,0,0.08);
+  color: #1a1a1a;
+  border: 1px solid rgba(0,0,0,0.1);
 }
 .advisory-info {
-  color: #cff4fc;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.25);
 }
 .advisory-countdown {
-  font-size: 0.78rem;
-  opacity: 0.8;
+  font-size: 0.75rem;
+  opacity: 0.7;
   font-style: italic;
-  margin-left: 4px;
+  margin-left: 6px;
+  font-weight: 400;
 }
 .advisory-close-btn {
-  background: rgba(255,255,255,0.2);
-  border: none;
-  color: #fff;
-  width: 28px;
-  height: 28px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: inherit;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
 }
 .advisory-close-btn:hover {
-  background: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
 }
 @keyframes advisoryScroll {
-  0% { transform: translateX(100%); }
+  0% { transform: translateX(100vw); }
   100% { transform: translateX(-100%); }
 }
