@@ -136,6 +136,20 @@ def teacher_required(f):
 @teacher_required
 def teacher_dashboard():
     cur = mysql.connection.cursor()
+
+    # Get teacher name and split into last name, first name format
+    full_name = session.get('user_name', '')
+    # Remove 'Prof.' prefix if present
+    clean_name = full_name.replace('Prof.', '').strip()
+    name_parts = clean_name.split()
+    if len(name_parts) >= 2:
+        # Last word is last name, everything else is first name(s)
+        teacher_last_name = name_parts[-1]
+        teacher_first_name = ' '.join(name_parts[:-1])
+    else:
+        teacher_last_name = clean_name
+        teacher_first_name = ''
+
     # 1. Active Courses
     cur.execute("SELECT * FROM courses WHERE is_active = 1 ORDER BY course_name ASC")
     courses = cur.fetchall()
@@ -148,13 +162,20 @@ def teacher_dashboard():
     cur.execute("SELECT COUNT(*) as student_count FROM users WHERE role = 'STUDENT' AND status = 'Active'")
     student_count = cur.fetchone()['student_count']
 
+    # 4. Total enrollments count
+    cur.execute("SELECT COUNT(*) as enrollment_count FROM enrollments")
+    enrollment_count = cur.fetchone()['enrollment_count']
+
     cur.close()
 
     return render_template(
         'portal/teacher_dashboard.html',
         courses=courses,
         events=events,
-        student_count=student_count
+        student_count=student_count,
+        enrollment_count=enrollment_count,
+        teacher_last_name=teacher_last_name,
+        teacher_first_name=teacher_first_name
     )
 
 def send_email(subject, recipient, html_body):

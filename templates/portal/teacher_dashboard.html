@@ -1,12 +1,12 @@
 {% extends 'layout.html' %}
 {% block content %}
 
-<!-- HERO BANNER -->
-<div class="about-hero-wrapper py-4" style="background: linear-gradient(rgba(30, 96, 213, 0.90), rgba(26, 84, 190, 0.95)); padding: 60px 20px 80px 20px;">
+<!-- HERO BANNER - FACULTY PORTAL -->
+<div class="about-hero-wrapper" style="background: linear-gradient(rgba(30, 96, 213, 0.92), rgba(26, 84, 190, 0.96)); padding: 60px 20px 70px 20px; min-height: 250px; display: flex; align-items: center;">
   <div class="container text-center">
-    <span class="badge bg-warning text-dark px-3 py-1 mb-2 fw-bold text-uppercase">Faculty Portal</span>
-    <h1 class="about-hero-title fs-2">Welcome, Prof. {{ session.get('user_name') }}</h1>
-    <p class="text-white opacity-75 small mb-0">Teacher &amp; Faculty Academic Overview</p>
+    <span class="badge bg-warning text-dark px-4 py-2 mb-3 fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Faculty Portal</span>
+    <h1 class="fw-bold text-white mb-3" style="font-size: 2.4rem; letter-spacing: 0.5px;">Welcome, Prof. {{ teacher_last_name }}, {{ teacher_first_name }}</h1>
+    <p class="text-white fw-semibold mb-0" style="font-size: 1.15rem; letter-spacing: 0.5px; opacity: 0.95;">Teacher &amp; Faculty Academic Overview</p>
   </div>
   <div class="torn-paper-edge"></div>
 </div>
@@ -15,21 +15,28 @@
   
   <!-- QUICK STATS -->
   <div class="row g-4 mb-5">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="card p-3 shadow-sm border-0 rounded-3 bg-white" style="border-left: 5px solid #1e60d5 !important;">
         <div class="text-muted small text-uppercase fw-bold">Active Students</div>
         <h3 class="fw-bolder text-dark mb-0">{{ student_count }}</h3>
         <small class="text-muted">Enrolled in college</small>
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+      <div class="card p-3 shadow-sm border-0 rounded-3 bg-white" style="border-left: 5px solid #8b5cf6 !important;">
+        <div class="text-muted small text-uppercase fw-bold">Total Enrollments</div>
+        <h3 class="fw-bolder text-dark mb-0">{{ enrollment_count }}</h3>
+        <small class="text-muted">Course registrations</small>
+      </div>
+    </div>
+    <div class="col-md-3">
       <div class="card p-3 shadow-sm border-0 rounded-3 bg-white" style="border-left: 5px solid #10b981 !important;">
         <div class="text-muted small text-uppercase fw-bold">Active Programs</div>
         <h3 class="fw-bolder text-dark mb-0">{{ courses|length }}</h3>
         <small class="text-muted">Curricula &amp; Courses</small>
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="card p-3 shadow-sm border-0 rounded-3 bg-white" style="border-left: 5px solid #f59e0b !important;">
         <div class="text-muted small text-uppercase fw-bold">Academic Calendar</div>
         <h3 class="fw-bolder text-dark mb-0">{{ events|length }}</h3>
