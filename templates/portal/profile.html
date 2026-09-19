@@ -35,61 +35,23 @@
             <span class="profile-field-value fw-semibold text-dark text-end" style="font-size: 0.88rem;">{{ user.phone_number if (user and user.phone_number) else '0999192857' }}</span>
           </div>
 
-          <!-- SHOW ONLY IF ACTUALLY ENROLLED -->
-          {% if enrolled_courses %}
+          <!-- Enrollment section hidden - no enrollment data yet -->
           <div class="mt-4 pt-3 border-top">
             <h6 class="fw-bold mb-2 small text-dark"><i class="fa fa-graduation-cap me-1 text-primary"></i> Enrolled Program</h6>
-            {% for e in enrolled_courses %}
-            <div class="d-flex align-items-center gap-2 mb-2">
-              <span class="badge bg-success" style="font-size: 0.65rem;">{{ e.course_code }}</span>
-              <span class="small text-secondary">{{ e.course_name }}</span>
-            </div>
-            {% endfor %}
+            <p class="text-muted small mb-0">No enrollment data yet.</p>
           </div>
-          {% endif %}
         </div>
       </div>
 
-      <!-- RIGHT: ENROLLMENT STATUS (Shows "No Enrollment data yet" if NOT enrolled) -->
+      <!-- RIGHT: ENROLLMENT STATUS - Always shows "No Enrollment Data Yet" -->
       <div class="col-lg-8 col-md-7 ps-md-4">
-        {% if enrolled_courses %}
-          <!-- ONLY SHOWN IF ENROLLED -->
-          <div class="user-profile-card shadow-sm p-4 bg-white rounded border" style="border-radius: 6px;">
-            <h5 class="fw-bold mb-1"><i class="fa fa-lightbulb me-2 text-warning"></i>Recommended For You</h5>
-            <p class="text-muted small mb-3">Based on your enrolled program and profile, here are suggestions to enhance your college journey:</p>
-
-            <div class="row g-3">
-              {% for rec in recommendations %}
-              <div class="col-md-6">
-                <a href="{{ rec.link }}" class="text-decoration-none">
-                  <div class="p-3 rounded h-100 border bg-light">
-                    <div class="d-flex align-items-start gap-2">
-                      <div class="rounded d-flex align-items-center justify-content-center flex-shrink-0" 
-                           style="width: 36px; height: 36px; background: {{ rec.color }}20; color: {{ rec.color }};">
-                        <i class="fa {{ rec.icon }}"></i>
-                      </div>
-                      <div class="flex-grow-1">
-                        <span class="badge mb-1" style="background: {{ rec.color }}25; color: {{ rec.color }}; font-size: 0.6rem;">{{ rec.badge }}</span>
-                        <h6 class="fw-bold mb-1 text-dark" style="font-size: 0.88rem;">{{ rec.title }}</h6>
-                        <p class="mb-0 text-muted small" style="font-size: 0.76rem; line-height: 1.4;">{{ rec.desc }}</p>
-                      </div>
-                    </div>
-                  </div>
-                </a>
-              </div>
-              {% endfor %}
-            </div>
+        <div class="user-profile-card shadow-sm p-5 bg-white rounded border text-center" style="border-radius: 6px;">
+          <div class="mb-3">
+            <i class="fa fa-clipboard-list text-muted" style="font-size: 3rem; opacity: 0.5;"></i>
           </div>
-        {% else %}
-          <!-- SHOWN WHEN NOT ENROLLED -->
-          <div class="user-profile-card shadow-sm p-5 bg-white rounded border text-center" style="border-radius: 6px;">
-            <div class="mb-3">
-              <i class="fa fa-clipboard-list text-muted" style="font-size: 3rem; opacity: 0.5;"></i>
-            </div>
-            <h5 class="fw-bold text-dark mb-2">No Enrollment Data Yet</h5>
-            <p class="text-muted mb-0" style="font-size: 0.95rem;">You are not currently enrolled in any academic program. Please contact the registrar's office or wait for enrollment instructions.</p>
-          </div>
-        {% endif %}
+          <h5 class="fw-bold text-dark mb-2">No Enrollment Data Yet</h5>
+          <p class="text-muted mb-0" style="font-size: 0.95rem;">You are not currently enrolled in any academic program. Please contact the registrar's office or wait for enrollment instructions.</p>
+        </div>
       </div>
 
     </div>
