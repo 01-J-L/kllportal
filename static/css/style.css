@@ -818,6 +818,11 @@ body.portal-body {
   color: #334155;
   font-size: 0.88rem;
   line-height: 1.65;
+  overflow: hidden;
+}
+.kll-accordion .accordion-body img {
+  max-width: 100%;
+  height: auto;
 }
 
 .course-detail-title {
@@ -2623,6 +2628,71 @@ body.portal-body {
   .footer-map-frame {
     height: 200px;
   }
+
+  /* --- ADMIN TABLE RESPONSIVE WRAPPER --- */
+  .table-responsive {
+    border-radius: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* --- ADMIN MODALS --- */
+  .modal-header {
+    padding: 14px 18px;
+  }
+  .modal-footer {
+    padding: 12px 18px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .modal-footer .btn {
+    flex: 1 1 45%;
+    min-width: 120px;
+  }
+
+  /* --- ADMIN FORMS IN MODALS --- */
+  .modal-body .form-label {
+    font-size: 0.82rem;
+    margin-bottom: 4px;
+  }
+  .modal-body .form-control,
+  .modal-body .form-select {
+    font-size: 0.88rem;
+    padding: 8px 12px;
+  }
+
+  /* --- ADMIN CREATE BUTTON --- */
+  .btn-admin-green {
+    font-size: 0.85rem;
+    padding: 10px 18px;
+  }
+
+  /* --- ADVISORY BANNER --- */
+  .advisory-banner-inner {
+    padding: 8px 12px;
+  }
+  .advisory-item {
+    font-size: 0.82rem;
+    padding: 0 20px;
+  }
+
+  /* --- GENERIC CARDS --- */
+  .generic-news-card .generic-news-body {
+    padding: 18px;
+  }
+  .pdf-doc-card {
+    padding: 15px;
+  }
+
+  /* --- CONTACT INFO ITEMS --- */
+  .info-item-card {
+    gap: 12px;
+  }
+  .icon-square {
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+  }
 }
 
 /* ---------- PHABLETS / LARGE PHONES (576px–767px) ---------- */
@@ -2692,6 +2762,10 @@ body.portal-body {
   .kll-accordion .accordion-body {
     padding: 20px 15px;
   }
+  .kll-accordion .accordion-button {
+    font-size: 0.88rem;
+    padding: 12px 16px;
+  }
 
   /* --- CALENDAR --- */
   .calendar-wrapper {
@@ -2722,6 +2796,17 @@ body.portal-body {
   /* --- HANDBOOK --- */
   .handbook-wrapper {
     padding: 10px 15px 60px 15px;
+  }
+
+  /* --- VIRTUAL TOUR --- */
+  .vt-card {
+    margin-bottom: 15px;
+  }
+
+  /* --- CLUBS --- */
+  .club-item-col {
+    flex: 0 0 100%;
+    max-width: 100%;
   }
 
   /* --- STUDENT LOGIN CARD --- */
@@ -2773,13 +2858,22 @@ body.portal-body {
   }
 
   /* --- ADMIN DATA TABLE --- */
+  .table-responsive {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+  }
+  .admin-data-table {
+    min-width: 600px;
+  }
   .admin-data-table th {
     font-size: 0.68rem;
     padding: 10px 8px;
+    white-space: nowrap;
   }
   .admin-data-table td {
     padding: 12px 8px;
     font-size: 0.8rem;
+    vertical-align: middle;
   }
   .role-badge-pill {
     font-size: 0.65rem;
@@ -2791,6 +2885,73 @@ body.portal-body {
     display: flex;
     flex-direction: column;
     gap: 4px;
+  }
+  .btn-tbl-show,
+  .btn-tbl-edit,
+  .btn-tbl-delete {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+
+  /* --- ADMIN MODALS --- */
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+  .modal-content {
+    border-radius: 10px;
+  }
+  .modal-header {
+    padding: 12px 16px;
+  }
+  .modal-header h5 {
+    font-size: 1rem;
+  }
+  .modal-body {
+    padding: 16px !important;
+  }
+  .modal-body .row.g-3 > [class*="col-"] {
+    padding-left: 0;
+    padding-right: 0;
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .modal-body .form-label {
+    font-size: 0.78rem;
+    margin-bottom: 3px;
+  }
+  .modal-body .form-control,
+  .modal-body .form-select {
+    font-size: 0.85rem;
+    padding: 7px 10px;
+  }
+  .modal-body textarea.form-control {
+    min-height: 80px;
+  }
+  .modal-footer {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .modal-footer .btn {
+    width: 100%;
+  }
+
+  /* --- ADMIN CREATE BUTTON --- */
+  .btn-admin-green {
+    font-size: 0.82rem;
+    padding: 10px 16px;
+    width: 100%;
+  }
+
+  /* --- ADMIN PANEL CARD FORMS --- */
+  .admin-panel-card .form-control,
+  .admin-panel-card .form-select {
+    font-size: 0.85rem;
+  }
+  .admin-panel-card .form-label {
+    font-size: 0.78rem;
   }
 
   /* --- CAMPUS PHOTO --- */
@@ -2838,6 +2999,9 @@ body.portal-body {
   .generic-news-title {
     font-size: 1.1rem;
   }
+  .generic-news-card .generic-news-body {
+    padding: 15px;
+  }
 
   /* --- PDF DOC CARDS --- */
   .adobe-pdf-icon-wrapper {
@@ -2866,19 +3030,6 @@ body.portal-body {
     margin-right: 10px;
   }
 
-  /* --- MODALS ON MOBILE --- */
-  .modal-dialog {
-    margin: 0.5rem;
-    max-width: calc(100% - 1rem);
-  }
-  .modal-body {
-    padding: 16px !important;
-  }
-  .modal-body .row.g-3 > [class*="col-"] {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
   /* --- PAGINATION --- */
   .kll-pagination-wrapper {
     flex-wrap: wrap;
@@ -2897,6 +3048,61 @@ body.portal-body {
     width: 38px;
     height: 38px;
     font-size: 0.9rem;
+  }
+
+  /* --- ADVISORY BANNER --- */
+  .advisory-banner-inner {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .advisory-item {
+    font-size: 0.78rem;
+    padding: 0 15px;
+  }
+  .advisory-countdown {
+    display: block;
+    margin-left: 0;
+    margin-top: 2px;
+  }
+
+  /* --- CONTACT INFO ITEMS --- */
+  .info-item-card {
+    gap: 10px;
+    padding: 15px;
+  }
+  .icon-square {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  .info-item-text h6 {
+    font-size: 0.9rem;
+  }
+  .info-item-text p {
+    font-size: 0.8rem;
+  }
+
+  /* --- ORG CHART --- */
+  .org-chart-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .org-line-horiz {
+    width: 40%;
+  }
+
+  /* --- CLUBS SEARCH --- */
+  .club-search-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* --- QUILL EDITOR RESPONSIVE --- */
+  .ql-toolbar.ql-snow {
+    flex-wrap: wrap;
+  }
+  .ql-toolbar.ql-snow .ql-formats {
+    margin-right: 8px;
   }
 }
 
@@ -3024,6 +3230,42 @@ body.portal-body {
     font-size: 1.15rem;
   }
 
+  /* --- ADMIN TABLES SMALL --- */
+  .admin-data-table {
+    min-width: 500px;
+  }
+  .admin-data-table th {
+    font-size: 0.62rem;
+    padding: 8px 6px;
+  }
+  .admin-data-table td {
+    padding: 10px 6px;
+    font-size: 0.75rem;
+  }
+
+  /* --- ADMIN MODALS SMALL --- */
+  .modal-dialog {
+    margin: 0.25rem;
+    max-width: calc(100% - 0.5rem);
+  }
+  .modal-header {
+    padding: 10px 12px;
+  }
+  .modal-header h5 {
+    font-size: 0.9rem;
+  }
+  .modal-body {
+    padding: 12px !important;
+  }
+  .modal-body .form-label {
+    font-size: 0.75rem;
+  }
+  .modal-body .form-control,
+  .modal-body .form-select {
+    font-size: 0.82rem;
+    padding: 6px 8px;
+  }
+
   /* --- LOGIN CARD --- */
   .login-card {
     border-radius: 12px;
@@ -3044,6 +3286,51 @@ body.portal-body {
   .kll-pagination-wrapper {
     flex-wrap: wrap;
     justify-content: center;
+  }
+
+  /* --- ADVISORY BANNER --- */
+  .advisory-item {
+    font-size: 0.72rem;
+    padding: 0 12px;
+  }
+  .advisory-close-btn {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* --- GENERIC CARDS --- */
+  .generic-news-card .generic-news-body {
+    padding: 12px;
+  }
+  .generic-news-title {
+    font-size: 1rem;
+  }
+
+  /* --- CONTACT INFO --- */
+  .info-item-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+    padding: 12px;
+  }
+  .icon-square {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+
+  /* --- CLUB CARDS --- */
+  .club-item-col {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  /* --- QUILL TOOLBAR SMALL --- */
+  .ql-toolbar.ql-snow {
+    font-size: 12px;
+  }
+  .ql-toolbar.ql-snow .ql-picker-label {
+    padding: 2px 4px;
   }
 }
 

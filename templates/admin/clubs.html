@@ -103,7 +103,7 @@
         {% endif %}
         <div class="mb-3">
           <label class="form-label">CLUB DETAILS &amp; ANNOUNCEMENTS</label>
-          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.6;">{{ club.details }}</div>
+          <div class="p-3 bg-light rounded border" style="line-height: 1.6;">{{ club.details }}</div>
         </div>
         <div class="row g-3">
           <div class="col-md-4">
@@ -165,10 +165,7 @@
           </div>
           <div class="col-md-6">
             <label class="form-label">Club Details &amp; Meeting Schedules</label>
-            <div class="cms-quill-wrapper">
-              <div id="quillEditorEditClub{{ club.id }}"></div>
-              <input type="hidden" name="details" id="quillInputEditClub{{ club.id }}" value="{{ club.details or '' }}">
-            </div>
+            <textarea name="details" class="form-control" rows="4" placeholder="Enter club details, meeting schedules...">{{ club.details or '' }}</textarea>
           </div>
 
           <!-- EDIT / ADD / REMOVE LINK INPUT -->
@@ -241,10 +238,7 @@
           </div>
           <div class="col-md-6">
             <label class="form-label">Club Details / Announcements</label>
-            <div class="cms-quill-wrapper">
-              <div id="quillEditorCreateClub"></div>
-              <input type="hidden" name="details" id="quillInputCreateClub">
-            </div>
+            <textarea name="details" class="form-control" rows="4" placeholder="Enter club details, meeting schedules..."></textarea>
           </div>
           <div class="col-12">
             <label class="form-label">Club Official Link (Optional)</label>
@@ -276,32 +270,6 @@
 </footer>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  var createClubEditor = new Quill('#quillEditorCreateClub', {
-    theme: 'snow',
-    placeholder: 'Enter meeting schedules and mission...',
-    modules: {
-      toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['link', 'image'],
-        ['clean']
-      ]
-    }
-  });
-  createClubEditor.on('text-change', function() {
-    document.getElementById('quillInputCreateClub').value = createClubEditor.root.innerHTML;
-  });
-  var createForm = document.querySelector('#createClubModal form');
-  if (createForm) {
-    createForm.addEventListener('submit', function() {
-      document.getElementById('quillInputCreateClub').value = createClubEditor.root.innerHTML;
-    });
-  }
-});
-
 function previewClubImage(input, targetId) {
   if (input.files && input.files[0]) {
     var reader = new FileReader();
@@ -312,37 +280,5 @@ function previewClubImage(input, targetId) {
   }
 }
 </script>
-
-{% for club in clubs %}
-<script>
-(function() {
-  var editor = new Quill('#quillEditorEditClub{{ club.id }}', {
-    theme: 'snow',
-    placeholder: 'Club details...',
-    modules: {
-      toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['link', 'image'],
-        ['clean']
-      ]
-    }
-  });
-  var initialContent = document.getElementById('quillInputEditClub{{ club.id }}').value;
-  if (initialContent) { editor.root.innerHTML = initialContent; }
-  editor.on('text-change', function() {
-    document.getElementById('quillInputEditClub{{ club.id }}').value = editor.root.innerHTML;
-  });
-  var form = document.getElementById('quillEditorEditClub{{ club.id }}').closest('form');
-  if (form) {
-    form.addEventListener('submit', function() {
-      document.getElementById('quillInputEditClub{{ club.id }}').value = editor.root.innerHTML;
-    });
-  }
-})();
-</script>
-{% endfor %}
 
 {% endblock %}

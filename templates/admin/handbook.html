@@ -96,7 +96,7 @@
         {% if hb.description %}
         <div class="mb-3">
           <label class="form-label">SUMMARY / DESCRIPTION</label>
-          <div class="p-3 bg-light rounded border" style="white-space: pre-line;">{{ hb.description }}</div>
+          <div class="p-3 bg-light rounded border" style="line-height: 1.6;">{{ hb.description|safe }}</div>
         </div>
         {% endif %}
         <div>

@@ -127,7 +127,7 @@
         </div>
         <div class="mb-3">
           <label class="form-label">DESCRIPTION</label>
-          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.6;">{{ ev.description }}</div>
+          <div class="p-3 bg-light rounded border" style="line-height: 1.6;">{{ ev.description }}</div>
         </div>
         <div>
           <label class="form-label">EVENT LINK</label>
@@ -179,10 +179,7 @@
 
           <div class="col-12">
             <label class="form-label">Description</label>
-            <div class="cms-quill-wrapper">
-              <div id="quillEditorEditEvent{{ ev.id }}"></div>
-              <input type="hidden" name="description" id="quillInputEditEvent{{ ev.id }}" value="{{ ev.description or '' }}">
-            </div>
+            <textarea name="description" class="form-control" rows="4" placeholder="Event details, guidelines, venue...">{{ ev.description or '' }}</textarea>
           </div>
 
           <div class="col-12">
@@ -257,10 +254,7 @@
           </div>
           <div class="col-12">
             <label class="form-label">Description</label>
-            <div class="cms-quill-wrapper">
-              <div id="quillEditorCreateEvent"></div>
-              <input type="hidden" name="description" id="quillInputCreateEvent">
-            </div>
+            <textarea name="description" class="form-control" rows="4" placeholder="Event details, guidelines, venue..."></textarea>
           </div>
           <div class="col-12">
             <label class="form-label">Event Link (Optional)</label>
@@ -289,33 +283,6 @@
 </footer>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize Quill for create event modal
-  var createEventEditor = new Quill('#quillEditorCreateEvent', {
-    theme: 'snow',
-    placeholder: 'Schedule details, guidelines, venue...',
-    modules: {
-      toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['link', 'image'],
-        ['clean']
-      ]
-    }
-  });
-  createEventEditor.on('text-change', function() {
-    document.getElementById('quillInputCreateEvent').value = createEventEditor.root.innerHTML;
-  });
-  var createForm = document.querySelector('#createEventModal form');
-  if (createForm) {
-    createForm.addEventListener('submit', function() {
-      document.getElementById('quillInputCreateEvent').value = createEventEditor.root.innerHTML;
-    });
-  }
-});
-
 function previewEvImg(input, targetId) {
   if (input.files && input.files[0]) {
     var reader = new FileReader();
@@ -326,37 +293,5 @@ function previewEvImg(input, targetId) {
   }
 }
 </script>
-
-{% for ev in events %}
-<script>
-(function() {
-  var editor = new Quill('#quillEditorEditEvent{{ ev.id }}', {
-    theme: 'snow',
-    placeholder: 'Event description...',
-    modules: {
-      toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['link', 'image'],
-        ['clean']
-      ]
-    }
-  });
-  var initialContent = document.getElementById('quillInputEditEvent{{ ev.id }}').value;
-  if (initialContent) { editor.root.innerHTML = initialContent; }
-  editor.on('text-change', function() {
-    document.getElementById('quillInputEditEvent{{ ev.id }}').value = editor.root.innerHTML;
-  });
-  var form = document.getElementById('quillEditorEditEvent{{ ev.id }}').closest('form');
-  if (form) {
-    form.addEventListener('submit', function() {
-      document.getElementById('quillInputEditEvent{{ ev.id }}').value = editor.root.innerHTML;
-    });
-  }
-})();
-</script>
-{% endfor %}
 
 {% endblock %}

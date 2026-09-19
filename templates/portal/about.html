@@ -14,7 +14,7 @@
     {% for sec in about_sections %}
       <div class="about-block mb-4">
         <h3 class="text-uppercase fw-bold text-dark">{{ sec.title }}</h3>
-        <div style="line-height: 1.7; color: var(--text-muted); font-size: 0.95rem;">{{ sec.body|safe }}</div>
+        <div style="line-height: 1.7; color: var(--text-muted); font-size: 0.95rem;">{{ sec.body }}</div>
       </div>
     {% endfor %}
   {% else %}

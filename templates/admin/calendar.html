@@ -31,7 +31,7 @@
         {% for ev in events %}
         <tr>
           <td class="fw-bold">{{ ev.title }}</td>
-          <td class="text-muted" style="max-width: 250px;">{{ ev.description[:80] }}{% if ev.description|length > 80 %}...{% endif %}</td>
+          <td class="text-muted" style="max-width: 250px;">{{ (ev.description|striptags)[:80] }}{% if ev.description|length > 80 %}...{% endif %}</td>
           <td style="white-space: nowrap;">{{ ev.start_date.strftime('%b %d, %Y %I:%M %p') if ev.start_date else '' }}</td>
           <td style="white-space: nowrap;">{{ ev.end_date.strftime('%b %d, %Y %I:%M %p') if ev.end_date else '' }}</td>
           <td class="text-center">
@@ -42,12 +42,12 @@
           <td class="text-center" style="white-space: nowrap;">
 
             <!-- 1. Blue SHOW Button -->
-            <button class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showCal{{ ev.id }}">
+            <button type="button" class="btn-tbl-show" data-bs-toggle="modal" data-bs-target="#showCal{{ ev.id }}">
               SHOW
             </button>
 
             <!-- 2. Pink EDIT Button -->
-            <button class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editCal{{ ev.id }}">
+            <button type="button" class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editCal{{ ev.id }}">
               EDIT
             </button>
 
@@ -60,95 +60,6 @@
 
           </td>
         </tr>
-
-        <!-- ================= SHOW CALENDAR MODAL ================= -->
-        <div class="modal fade" id="showCal{{ ev.id }}" tabindex="-1">
-          <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow">
-              <div class="modal-header" style="background-color: #1e60d5; color: #fff;">
-                <h5 class="modal-title fw-bold">{{ ev.title }}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body p-4 text-start">
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <div class="p-3 bg-light rounded">
-                      <small class="text-muted fw-bold d-block mb-1">START DATE & TIME</small>
-                      <span class="fw-bold">{{ ev.start_date.strftime('%B %d, %Y at %I:%M %p') if ev.start_date else 'N/A' }}</span>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="p-3 bg-light rounded">
-                      <small class="text-muted fw-bold d-block mb-1">END DATE & TIME</small>
-                      <span class="fw-bold">{{ ev.end_date.strftime('%B %d, %Y at %I:%M %p') if ev.end_date else 'N/A' }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <small class="text-muted fw-bold d-block mb-1">DESCRIPTION</small>
-                  <p class="mb-0" style="white-space: pre-line; line-height: 1.7;">{{ ev.description }}</p>
-                </div>
-                <div>
-                  <small class="text-muted fw-bold d-block mb-1">STATUS</small>
-                  <span class="badge {{ 'bg-success' if ev.is_active else 'bg-secondary' }} fs-6">
-                    {{ 'Active' if ev.is_active else 'Inactive' }}
-                  </span>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ================= EDIT CALENDAR MODAL ================= -->
-        <div class="modal fade" id="editCal{{ ev.id }}" tabindex="-1">
-          <div class="modal-dialog modal-lg">
-            <form class="modal-content border-0 shadow" action="{{ url_for('admin_edit_calendar', id=ev.id) }}" method="POST">
-              <div class="modal-header" style="background-color: #ec4899; color: #fff;">
-                <h5 class="modal-title fw-bold">Edit Calendar Event</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body p-4 text-start">
-                <div class="mb-3">
-                  <label class="form-label small fw-bold">Event Title</label>
-                  <input type="text" name="title" class="form-control" value="{{ ev.title }}" required>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label small fw-bold">Description</label>
-                  <div class="cms-quill-wrapper">
-                    <div id="quillEditorEditCal{{ ev.id }}"></div>
-                    <input type="hidden" name="description" id="quillInputEditCal{{ ev.id }}" value="{{ ev.description or '' }}">
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label small fw-bold">Start Date & Time</label>
-                    <input type="datetime-local" name="start_date" class="form-control"
-                           value="{{ ev.start_date.strftime('%Y-%m-%dT%H:%M') if ev.start_date else '' }}" required>
-                  </div>
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label small fw-bold">End Date & Time</label>
-                    <input type="datetime-local" name="end_date" class="form-control"
-                           value="{{ ev.end_date.strftime('%Y-%m-%dT%H:%M') if ev.end_date else '' }}" required>
-                  </div>
-                </div>
-                <div class="form-check mt-2">
-                  <input class="form-check-input" type="checkbox" name="is_active" id="activeCalCheck{{ ev.id }}" {% if ev.is_active %}checked{% endif %}>
-                  <label class="form-check-label small fw-bold" for="activeCalCheck{{ ev.id }}">
-                    Is Active
-                  </label>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-danger">Save Changes</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
         {% endfor %}
 
       </tbody>
@@ -156,6 +67,102 @@
   </div>
 
 </div>
+
+<!-- ========================================================= -->
+<!-- MODALS PLACED OUTSIDE TABLE (PREVENTS STACKING/FREEZING)  -->
+<!-- ========================================================= -->
+
+{% for ev in events %}
+
+<!-- ================= SHOW CALENDAR MODAL ================= -->
+<div class="modal fade" id="showCal{{ ev.id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header" style="background-color: #1e60d5; color: #fff;">
+        <h5 class="modal-title fw-bold">{{ ev.title }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4 text-start">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded">
+              <small class="text-muted fw-bold d-block mb-1">START DATE & TIME</small>
+              <span class="fw-bold">{{ ev.start_date.strftime('%B %d, %Y at %I:%M %p') if ev.start_date else 'N/A' }}</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded">
+              <small class="text-muted fw-bold d-block mb-1">END DATE & TIME</small>
+              <span class="fw-bold">{{ ev.end_date.strftime('%B %d, %Y at %I:%M %p') if ev.end_date else 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <small class="text-muted fw-bold d-block mb-1">DESCRIPTION</small>
+          <p class="mb-0" style="line-height: 1.7;">{{ ev.description|safe }}</p>
+        </div>
+        <div>
+          <small class="text-muted fw-bold d-block mb-1">STATUS</small>
+          <span class="badge {{ 'bg-success' if ev.is_active else 'bg-secondary' }} fs-6">
+            {{ 'Active' if ev.is_active else 'Inactive' }}
+          </span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= EDIT CALENDAR MODAL ================= -->
+<div class="modal fade" id="editCal{{ ev.id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form class="modal-content border-0 shadow" action="{{ url_for('admin_edit_calendar', id=ev.id) }}" method="POST">
+      <div class="modal-header" style="background-color: #ec4899; color: #fff;">
+        <h5 class="modal-title fw-bold">Edit Calendar Event</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4 text-start">
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Event Title</label>
+          <input type="text" name="title" class="form-control" value="{{ ev.title }}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Description</label>
+          <div class="cms-quill-wrapper">
+            <div id="quillEditorEditCal{{ ev.id }}"></div>
+            <input type="hidden" name="description" id="quillInputEditCal{{ ev.id }}" value="{{ ev.description or '' }}">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label small fw-bold">Start Date & Time</label>
+            <input type="datetime-local" name="start_date" class="form-control"
+                   value="{{ ev.start_date.strftime('%Y-%m-%dT%H:%M') if ev.start_date else '' }}" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label small fw-bold">End Date & Time</label>
+            <input type="datetime-local" name="end_date" class="form-control"
+                   value="{{ ev.end_date.strftime('%Y-%m-%dT%H:%M') if ev.end_date else '' }}" required>
+          </div>
+        </div>
+        <div class="form-check mt-2">
+          <input class="form-check-input" type="checkbox" name="is_active" id="activeCalCheck{{ ev.id }}" {% if ev.is_active %}checked{% endif %}>
+          <label class="form-check-label small fw-bold" for="activeCalCheck{{ ev.id }}">
+            Is Active
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endfor %}
 
 <!-- ================= CREATE NEW ACADEMIC CALENDAR MODAL ================= -->
 <div class="modal fade" id="createCalendarModal" tabindex="-1">
@@ -211,20 +218,35 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  var quillToolbar = [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link', 'image'],
+    ['clean']
+  ];
+
+  function addLinkHandler(editor) {
+    editor.getModule('toolbar').addHandler('link', function(value) {
+      var range = editor.getSelection();
+      if (range) {
+        if (range.length > 0) {
+          var url = prompt('Enter URL:');
+          if (url) { editor.format('link', url); }
+        } else {
+          var url = prompt('Enter URL:');
+          if (url) { editor.format('link', url); }
+        }
+      }
+    });
+  }
+
   var createCalEditor = new Quill('#quillEditorCreateCal', {
     theme: 'snow',
     placeholder: 'Enter activity details...',
-    modules: {
-      toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['link', 'image'],
-        ['clean']
-      ]
-    }
+    modules: { toolbar: quillToolbar }
   });
+  addLinkHandler(createCalEditor);
   createCalEditor.on('text-change', function() {
     document.getElementById('quillInputCreateCal').value = createCalEditor.root.innerHTML;
   });
@@ -234,39 +256,25 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('quillInputCreateCal').value = createCalEditor.root.innerHTML;
     });
   }
-});
-</script>
 
-{% for ev in events %}
-<script>
-(function() {
-  var editor = new Quill('#quillEditorEditCal{{ ev.id }}', {
-    theme: 'snow',
-    placeholder: 'Event description...',
-    modules: {
-      toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['link', 'image'],
-        ['clean']
-      ]
+  {% for ev in events %}
+  document.getElementById('editCal{{ ev.id }}').addEventListener('shown.bs.modal', function() {
+    if (!this.querySelector('.ql-toolbar')) {
+      var editor = new Quill('#quillEditorEditCal{{ ev.id }}', {
+        theme: 'snow',
+        placeholder: 'Event description...',
+        modules: { toolbar: quillToolbar }
+      });
+      addLinkHandler(editor);
+      var input = document.getElementById('quillInputEditCal{{ ev.id }}');
+      if (input.value) { editor.root.innerHTML = input.value; }
+      editor.on('text-change', function() { input.value = editor.root.innerHTML; });
+      var form = document.getElementById('quillEditorEditCal{{ ev.id }}').closest('form');
+      if (form) { form.addEventListener('submit', function() { input.value = editor.root.innerHTML; }); }
     }
   });
-  var initialContent = document.getElementById('quillInputEditCal{{ ev.id }}').value;
-  if (initialContent) { editor.root.innerHTML = initialContent; }
-  editor.on('text-change', function() {
-    document.getElementById('quillInputEditCal{{ ev.id }}').value = editor.root.innerHTML;
-  });
-  var form = document.getElementById('quillEditorEditCal{{ ev.id }}').closest('form');
-  if (form) {
-    form.addEventListener('submit', function() {
-      document.getElementById('quillInputEditCal{{ ev.id }}').value = editor.root.innerHTML;
-    });
-  }
-})();
+  {% endfor %}
+});
 </script>
-{% endfor %}
 
 {% endblock %}

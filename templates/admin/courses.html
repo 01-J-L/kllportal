@@ -32,7 +32,7 @@
           <td class="fw-bold">{{ c.course_code }}</td>
           <td>{{ c.course_name }}</td>
           <td class="text-muted" style="max-width: 280px;">
-            {{ c.description[:60] }}{% if c.description|length > 60 %}...{% endif %}
+            {{ (c.description|striptags)[:60] }}{% if c.description|length > 60 %}...{% endif %}
           </td>
           <td class="text-center fw-bold">{{ c.credits }}</td>
           <td class="text-center">
@@ -94,27 +94,27 @@
 
         <div class="mb-3">
           <label class="form-label">Course Overview</label>
-          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.6;">{{ c.description }}</div>
+          <div class="p-3 bg-light rounded border" style="line-height: 1.6;">{{ c.description|safe }}</div>
         </div>
 
         {% if c.curriculum_description %}
         <div class="mb-3">
           <label class="form-label">Curriculum Description</label>
-          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.6;">{{ c.curriculum_description }}</div>
+          <div class="p-3 bg-light rounded border" style="line-height: 1.6;">{{ c.curriculum_description|safe }}</div>
         </div>
         {% endif %}
 
         {% if c.objectives %}
         <div class="mb-3">
           <label class="form-label">Program Objectives</label>
-          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.6;">{{ c.objectives }}</div>
+          <div class="p-3 bg-light rounded border" style="line-height: 1.6;">{{ c.objectives|safe }}</div>
         </div>
         {% endif %}
 
         {% if c.outcomes %}
         <div class="mb-3">
           <label class="form-label">Program Outcomes</label>
-          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.6;">{{ c.outcomes }}</div>
+          <div class="p-3 bg-light rounded border" style="line-height: 1.6;">{{ c.outcomes|safe }}</div>
         </div>
         {% endif %}
 
@@ -283,19 +283,30 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  var quillToolbar = [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link', 'image'],
+    ['clean']
+  ];
+
   function initQuillCreate(id, placeholder) {
     var editor = new Quill('#' + id, {
       theme: 'snow',
       placeholder: placeholder,
-      modules: {
-        toolbar: [
-          [{ 'header': [1, 2, 3, false] }],
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          [{ 'align': [] }],
-          ['link', 'image'],
-          ['clean']
-        ]
+      modules: { toolbar: quillToolbar }
+    });
+    editor.getModule('toolbar').addHandler('link', function(value) {
+      var range = editor.getSelection();
+      if (range) {
+        if (range.length > 0) {
+          var url = prompt('Enter URL:');
+          if (url) { editor.format('link', url); }
+        } else {
+          var url = prompt('Enter URL:');
+          if (url) { editor.format('link', url); }
+        }
       }
     });
     var inputId = id.replace('quillEditor', 'quillInput');
@@ -313,45 +324,45 @@ document.addEventListener('DOMContentLoaded', function() {
   initQuillCreate('quillEditorCreateCurriculum', 'GE courses, core series, electives...');
   initQuillCreate('quillEditorCreateObjectives', 'Objectives of the graduates...');
   initQuillCreate('quillEditorCreateOutcomes', 'Measurable skills and outcomes...');
-});
-</script>
 
-{% for c in courses %}
-<script>
-(function() {
-  function initQuillEdit(editorId, inputId, placeholder) {
+  function initQuillInModal(modalEl, editorId, inputId, placeholder) {
     var editor = new Quill('#' + editorId, {
       theme: 'snow',
       placeholder: placeholder,
-      modules: {
-        toolbar: [
-          [{ 'header': [1, 2, 3, false] }],
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          [{ 'align': [] }],
-          ['link', 'image'],
-          ['clean']
-        ]
+      modules: { toolbar: quillToolbar }
+    });
+    editor.getModule('toolbar').addHandler('link', function(value) {
+      var range = editor.getSelection();
+      if (range) {
+        if (range.length > 0) {
+          var url = prompt('Enter URL:');
+          if (url) { editor.format('link', url); }
+        } else {
+          var url = prompt('Enter URL:');
+          if (url) { editor.format('link', url); }
+        }
       }
     });
-    var initialContent = document.getElementById(inputId).value;
-    if (initialContent) { editor.root.innerHTML = initialContent; }
-    editor.on('text-change', function() {
-      document.getElementById(inputId).value = editor.root.innerHTML;
-    });
+    var input = document.getElementById(inputId);
+    if (input.value) { editor.root.innerHTML = input.value; }
+    editor.on('text-change', function() { input.value = editor.root.innerHTML; });
     var form = document.getElementById(editorId).closest('form');
     if (form) {
-      form.addEventListener('submit', function() {
-        document.getElementById(inputId).value = editor.root.innerHTML;
-      });
+      form.addEventListener('submit', function() { input.value = editor.root.innerHTML; });
     }
   }
-  initQuillEdit('quillEditorEditCourse{{ c.id }}', 'quillInputEditCourse{{ c.id }}', 'Course overview...');
-  initQuillEdit('quillEditorEditCurriculum{{ c.id }}', 'quillInputEditCurriculum{{ c.id }}', 'Curriculum description...');
-  initQuillEdit('quillEditorEditObjectives{{ c.id }}', 'quillInputEditObjectives{{ c.id }}', 'Program objectives...');
-  initQuillEdit('quillEditorEditOutcomes{{ c.id }}', 'quillInputEditOutcomes{{ c.id }}', 'Program outcomes...');
-})();
+
+  {% for c in courses %}
+  document.getElementById('editCourseModal{{ c.id }}').addEventListener('shown.bs.modal', function() {
+    if (!this.querySelector('.ql-toolbar')) {
+      initQuillInModal(this, 'quillEditorEditCourse{{ c.id }}', 'quillInputEditCourse{{ c.id }}', 'Course overview...');
+      initQuillInModal(this, 'quillEditorEditCurriculum{{ c.id }}', 'quillInputEditCurriculum{{ c.id }}', 'Curriculum description...');
+      initQuillInModal(this, 'quillEditorEditObjectives{{ c.id }}', 'quillInputEditObjectives{{ c.id }}', 'Program objectives...');
+      initQuillInModal(this, 'quillEditorEditOutcomes{{ c.id }}', 'quillInputEditOutcomes{{ c.id }}', 'Program outcomes...');
+    }
+  });
+  {% endfor %}
+});
 </script>
-{% endfor %}
 
 {% endblock %}

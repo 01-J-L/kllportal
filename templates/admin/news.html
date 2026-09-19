@@ -200,11 +200,8 @@
           </div>
 
           <div class="col-12">
-            <div class="cms-quill-wrapper">
-              <label class="form-label">Article Content</label>
-              <div id="quillEditorEdit{{ item.id }}"></div>
-              <input type="hidden" name="content" id="quillInputEdit{{ item.id }}" value="{{ item.content or '' }}">
-            </div>
+            <label class="form-label">Article Content</label>
+            <textarea name="content" class="form-control" rows="5" placeholder="Write your article content...">{{ item.content or '' }}</textarea>
           </div>
 
           <div class="col-12">
@@ -239,45 +236,6 @@
     </form>
   </div>
 </div>
-
-<script>
-(function() {
-  var editor = new Quill('#quillEditorEdit{{ item.id }}', {
-    theme: 'snow',
-    placeholder: 'Write your article content...',
-    modules: {
-      toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['link', 'image'],
-        ['clean']
-      ]
-    }
-  });
-  // Set initial content
-  var initialContent = document.getElementById('quillInputEdit{{ item.id }}').value;
-  if (initialContent) { editor.root.innerHTML = initialContent; }
-  // Sync before form submit
-  editor.on('text-change', function() {
-    document.getElementById('quillInputEdit{{ item.id }}').value = editor.root.innerHTML;
-  });
-  var form = document.getElementById('quillEditorEdit{{ item.id }}').closest('form');
-  if (form) {
-    form.addEventListener('submit', function() {
-      document.getElementById('quillInputEdit{{ item.id }}').value = editor.root.innerHTML;
-    });
-  }
-  // Toggle publish date visibility
-  window['togglePublishDate{{ item.id }}'] = function() {
-    var sel = document.getElementById('editStatus{{ item.id }}');
-    var wrap = document.getElementById('editPublishDateWrap{{ item.id }}');
-    wrap.style.display = sel.value === 'scheduled' ? '' : 'none';
-  };
-})();
-</script>
 
 {% endfor %}
 
@@ -320,11 +278,8 @@
             <input type="datetime-local" name="publish_date" class="form-control">
           </div>
           <div class="col-12">
-            <div class="cms-quill-wrapper">
-              <label class="form-label">Article Content</label>
-              <div id="quillEditorCreate"></div>
-              <input type="hidden" name="content" id="quillInputCreate">
-            </div>
+            <label class="form-label">Article Content</label>
+            <textarea name="content" class="form-control" rows="5" placeholder="Write your article content..."></textarea>
           </div>
           <div class="col-12">
             <label class="form-label">Official Link (Optional)</label>
@@ -348,34 +303,6 @@
 </div>
 
 <script>
-// Create modal Quill editor
-document.addEventListener('DOMContentLoaded', function() {
-  var createEditor = new Quill('#quillEditorCreate', {
-    theme: 'snow',
-    placeholder: 'Write your article content...',
-    modules: {
-      toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['link', 'image'],
-        ['clean']
-      ]
-    }
-  });
-  createEditor.on('text-change', function() {
-    document.getElementById('quillInputCreate').value = createEditor.root.innerHTML;
-  });
-  var createForm = document.querySelector('#createNewsModal form');
-  if (createForm) {
-    createForm.addEventListener('submit', function() {
-      document.getElementById('quillInputCreate').value = createEditor.root.innerHTML;
-    });
-  }
-});
-
 function toggleCreatePublishDate() {
   var sel = document.getElementById('createStatus');
   var wrap = document.getElementById('createPublishDateWrap');

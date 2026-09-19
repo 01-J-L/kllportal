@@ -17,79 +17,110 @@ mail = Mail(app)
 # Create password_reset_tokens table if it doesn't exist
 with app.app_context():
     cur = mysql.connection.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS password_reset_tokens (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT NOT NULL,
-            token VARCHAR(64) NOT NULL UNIQUE,
-            expires_at DATETIME NOT NULL,
-            used TINYINT DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        )
-    """)
-    mysql.connection.commit()
+    try:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                token VARCHAR(64) NOT NULL UNIQUE,
+                expires_at DATETIME NOT NULL,
+                used TINYINT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        mysql.connection.commit()
+    except Exception:
+        pass
     cur.close()
 
 # CMS Upgrade: auto-create tables and add news columns
 with app.app_context():
-    cur = mysql.connection.cursor()
-    # Add columns to news table if they don't exist
-    for col, definition in [
-        ("category", "VARCHAR(50) DEFAULT 'General'"),
-        ("status", "VARCHAR(20) DEFAULT 'published'"),
-        ("publish_date", "DATETIME NULL")
-    ]:
+    try:
+        cur = mysql.connection.cursor()
+        # Add columns to news table if they don't exist
+        for col, definition in [
+            ("category", "VARCHAR(50) DEFAULT 'General'"),
+            ("status", "VARCHAR(20) DEFAULT 'published'"),
+            ("publish_date", "DATETIME NULL")
+        ]:
+            try:
+                cur.execute(f"ALTER TABLE news ADD COLUMN {col} {definition}")
+            except Exception:
+                pass  # Column already exists
+
+        # Add category column to events table if missing
         try:
-            cur.execute(f"ALTER TABLE news ADD COLUMN {col} {definition}")
+            cur.execute("ALTER TABLE events ADD COLUMN category VARCHAR(50) DEFAULT 'Campus Events'")
         except Exception:
-            pass  # Column already exists
+            pass
 
-    # Add category column to events table if missing
-    try:
-        cur.execute("ALTER TABLE events ADD COLUMN category VARCHAR(50) DEFAULT 'Campus Events'")
+        # Add category column to clubs table if missing
+        try:
+            cur.execute("ALTER TABLE clubs ADD COLUMN category VARCHAR(50) DEFAULT 'Student Organization'")
+        except Exception:
+            pass
+
+        # Add category column to virtual_tours table if missing
+        try:
+            cur.execute("ALTER TABLE virtual_tours ADD COLUMN category VARCHAR(50) DEFAULT 'Facilities'")
+        except Exception:
+            pass
+
+        # Add category column to student_handbooks table if missing
+        try:
+            cur.execute("ALTER TABLE student_handbooks ADD COLUMN category VARCHAR(50) DEFAULT 'General'")
+        except Exception:
+            pass
+
+        # Add expires_at to emergency_advisories if missing
+        try:
+            cur.execute("ALTER TABLE emergency_advisories ADD COLUMN expires_at DATETIME NULL")
+        except Exception:
+            pass
+
+        # Ensure description/content columns are TEXT (not VARCHAR) for Quill HTML content
+        alter_to_text = [
+            ("academic_calendar", "description"),
+            ("courses", "description"),
+            ("courses", "curriculum_description"),
+            ("courses", "objectives"),
+            ("courses", "outcomes"),
+            ("clubs", "details"),
+            ("news", "content"),
+            ("events", "description"),
+            ("virtual_tours", "description"),
+            ("about_sections", "body"),
+            ("student_handbooks", "description"),
+        ]
+        for table, column in alter_to_text:
+            try:
+                cur.execute(f"ALTER TABLE `{table}` MODIFY COLUMN `{column}` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+                print(f"[MIGRATION] Altered {table}.{column} to LONGTEXT")
+            except Exception as e:
+                print(f"[MIGRATION] {table}.{column}: {e}")
+                mysql.connection.rollback()
+
+        # Emergency Advisories table
+        try:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS emergency_advisories (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    title VARCHAR(255) NOT NULL,
+                    message TEXT NOT NULL,
+                    advisory_type VARCHAR(30) DEFAULT 'info',
+                    is_active TINYINT DEFAULT 1,
+                    expires_at DATETIME NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        except Exception:
+            pass
+
+        mysql.connection.commit()
+        cur.close()
     except Exception:
         pass
-
-    # Add category column to clubs table if missing
-    try:
-        cur.execute("ALTER TABLE clubs ADD COLUMN category VARCHAR(50) DEFAULT 'Student Organization'")
-    except Exception:
-        pass
-
-    # Add category column to virtual_tours table if missing
-    try:
-        cur.execute("ALTER TABLE virtual_tours ADD COLUMN category VARCHAR(50) DEFAULT 'Facilities'")
-    except Exception:
-        pass
-
-    # Add category column to student_handbooks table if missing
-    try:
-        cur.execute("ALTER TABLE student_handbooks ADD COLUMN category VARCHAR(50) DEFAULT 'General'")
-    except Exception:
-        pass
-
-    # Add expires_at to emergency_advisories if missing
-    try:
-        cur.execute("ALTER TABLE emergency_advisories ADD COLUMN expires_at DATETIME NULL")
-    except Exception:
-        pass
-
-    # Emergency Advisories table
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS emergency_advisories (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            message TEXT NOT NULL,
-            advisory_type VARCHAR(30) DEFAULT 'info',
-            is_active TINYINT DEFAULT 1,
-            expires_at DATETIME NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-
-    mysql.connection.commit()
-    cur.close()
 
 def teacher_required(f):
     @wraps(f)
@@ -969,11 +1000,19 @@ def admin_create_user():
 def admin_edit_user(id):
     name = request.form.get('name')
     email = request.form.get('email')
+    phone = request.form.get('phone_number')
     role = request.form.get('role')
     status = request.form.get('status')
+    password = request.form.get('password')
+
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE users SET name=%s, email=%s, role=%s, status=%s WHERE id=%s",
-                (name, email, role, status, id))
+    if password:
+        pw_hash = generate_password_hash(password)
+        cur.execute("UPDATE users SET name=%s, email=%s, phone_number=%s, role=%s, status=%s, password_hash=%s WHERE id=%s",
+                    (name, email, phone, role, status, pw_hash, id))
+    else:
+        cur.execute("UPDATE users SET name=%s, email=%s, phone_number=%s, role=%s, status=%s WHERE id=%s",
+                    (name, email, phone, role, status, id))
     mysql.connection.commit()
     cur.close()
     flash('User updated.', 'success')

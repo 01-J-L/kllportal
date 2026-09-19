@@ -42,7 +42,7 @@
                 <i class="fa fa-calendar-alt me-1 text-primary"></i> 
                 {{ ev.event_date.strftime('%B %d, %Y') if ev.event_date else 'Campus Event' }}
               </p>
-              <div class="small text-muted mt-2 mb-0" style="line-height: 1.7;">{{ ev.description|safe }}</div>
+              <div class="small text-muted mt-2 mb-0" style="line-height: 1.7;">{{ ev.description }}</div>
             </div>
           </div>
 

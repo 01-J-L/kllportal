@@ -204,7 +204,7 @@
         </div>
         <div class="mb-3">
           <label class="form-label">BODY / CONTENT</label>
-          <div class="p-3 bg-light rounded border" style="white-space: pre-line; line-height: 1.7;">{{ ab.body }}</div>
+          <div class="p-3 bg-light rounded border" style="line-height: 1.7;">{{ ab.body }}</div>
         </div>
         <div>
           <label class="form-label">STATUS</label>
@@ -238,10 +238,7 @@
           </div>
           <div class="col-12">
             <label class="form-label">Content Statement</label>
-            <div class="cms-quill-wrapper">
-              <div id="quillEditorEditAbout{{ ab.id }}"></div>
-              <input type="hidden" name="body" id="quillInputEditAbout{{ ab.id }}" value="{{ ab.body or '' }}">
-            </div>
+            <textarea name="body" class="form-control" rows="5" placeholder="Enter statement content...">{{ ab.body or '' }}</textarea>
           </div>
           <div class="col-12">
             <div class="form-check form-switch mt-2">
@@ -278,10 +275,7 @@
           </div>
           <div class="col-12">
             <label class="form-label">Content Statement</label>
-            <div class="cms-quill-wrapper">
-              <div id="quillEditorCreateAbout"></div>
-              <input type="hidden" name="body" id="quillInputCreateAbout">
-            </div>
+            <textarea name="body" class="form-control" rows="5" placeholder="Enter statement content..."></textarea>
           </div>
         </div>
       </div>
@@ -312,64 +306,6 @@ function previewOrgChart(input) {
     reader.readAsDataURL(input.files[0]);
   }
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-  var createAboutEditor = new Quill('#quillEditorCreateAbout', {
-    theme: 'snow',
-    placeholder: 'Enter statement content...',
-    modules: {
-      toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['link', 'image'],
-        ['clean']
-      ]
-    }
-  });
-  createAboutEditor.on('text-change', function() {
-    document.getElementById('quillInputCreateAbout').value = createAboutEditor.root.innerHTML;
-  });
-  var createForm = document.querySelector('#createAboutModal form');
-  if (createForm) {
-    createForm.addEventListener('submit', function() {
-      document.getElementById('quillInputCreateAbout').value = createAboutEditor.root.innerHTML;
-    });
-  }
-});
 </script>
-
-{% for ab in about_items %}
-<script>
-(function() {
-  var editor = new Quill('#quillEditorEditAbout{{ ab.id }}', {
-    theme: 'snow',
-    placeholder: 'Content statement...',
-    modules: {
-      toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['link', 'image'],
-        ['clean']
-      ]
-    }
-  });
-  var initialContent = document.getElementById('quillInputEditAbout{{ ab.id }}').value;
-  if (initialContent) { editor.root.innerHTML = initialContent; }
-  editor.on('text-change', function() {
-    document.getElementById('quillInputEditAbout{{ ab.id }}').value = editor.root.innerHTML;
-  });
-  var form = document.getElementById('quillEditorEditAbout{{ ab.id }}').closest('form');
-  if (form) {
-    form.addEventListener('submit', function() {
-      document.getElementById('quillInputEditAbout{{ ab.id }}').value = editor.root.innerHTML;
-    });
-  }
-})();
-</script>
-{% endfor %}
 
 {% endblock %}
