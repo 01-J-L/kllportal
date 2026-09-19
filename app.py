@@ -747,49 +747,43 @@ def admin_dashboard():
     cur.execute("SELECT COUNT(*) AS total_clubs FROM clubs WHERE is_active = 1")
     total_clubs = cur.fetchone()['total_clubs']
 
-    # 6. Enrollment count per course (bar chart)
+    # 6. Student registrations per month (line chart - last 12 months)
     cur.execute("""
-        SELECT c.course_code, c.course_name, COUNT(e.id) AS enroll_count
-        FROM courses c
-        LEFT JOIN enrollments e ON c.id = e.course_id
-        WHERE c.is_active = 1
-        GROUP BY c.id, c.course_code, c.course_name
-        ORDER BY enroll_count DESC
-    """)
-    enrollment_data = cur.fetchall()
-    enrollment_labels = [r['course_code'] for r in enrollment_data]
-    enrollment_counts = [r['enroll_count'] for r in enrollment_data]
-
-    # 7. Student registrations per month (line chart - last 12 months)
-    cur.execute("""
-        SELECT DATE_FORMAT(created_at, '%%Y-%%m') AS month_label,
-               COUNT(*) AS reg_count
+        SELECT YEAR(created_at) AS yr, MONTH(created_at) AS mo, COUNT(*) AS reg_count
         FROM users
         WHERE role = 'STUDENT'
           AND created_at >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-        GROUP BY month_label
-        ORDER BY month_label ASC
+        GROUP BY yr, mo
+        ORDER BY yr ASC, mo ASC
     """)
     monthly_data = cur.fetchall()
 
-    # Build full 12-month series
-    from datetime import datetime, timedelta
+    # Build full 12-month series using calendar month alignment
+    from datetime import datetime
     import calendar
-    month_series = []
     now = datetime.now()
+    month_series = []
     for i in range(11, -1, -1):
-        d = now - timedelta(days=i * 30)
-        key = d.strftime('%Y-%m')
-        label = d.strftime('%b %Y')
+        year = now.year
+        month = now.month - i
+        while month <= 0:
+            month += 12
+            year -= 1
+        key = f"{year}-{month:02d}"
+        label = calendar.month_abbr[month] + f" {year}"
         month_series.append({'key': key, 'label': label, 'count': 0})
 
-    reg_map = {r['month_label']: r['reg_count'] for r in monthly_data}
+    reg_map = {}
+    for r in monthly_data:
+        key = f"{r['yr']}-{r['mo']:02d}"
+        reg_map[key] = r['reg_count']
+
     for m in month_series:
         if m['key'] in reg_map:
             m['count'] = reg_map[m['key']]
 
     monthly_labels = [m['label'] for m in month_series]
-    monthly_counts = [m['count'] for m in month_series]
+    monthly_counts = [int(m['count']) for m in month_series]
 
     # 8. Status distribution (pie/doughnut)
     cur.execute("SELECT status, COUNT(*) as cnt FROM users WHERE role='STUDENT' GROUP BY status")
@@ -813,8 +807,6 @@ def admin_dashboard():
         total_courses=total_courses,
         total_events=total_events,
         total_clubs=total_clubs,
-        enrollment_labels=enrollment_labels,
-        enrollment_counts=enrollment_counts,
         monthly_labels=monthly_labels,
         monthly_counts=monthly_counts,
         status_labels=status_labels,

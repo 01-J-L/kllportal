@@ -86,16 +86,16 @@
 <!-- ================= DATA ANALYTICS SECTION ================= -->
 <div class="row g-4 mb-4">
 
-  <!-- ENROLLMENT PER COURSE (Bar Chart) -->
+  <!-- MONTHLY REGISTRATIONS (Line Chart) -->
   <div class="col-xl-8 col-lg-7">
     <div class="card border-0 rounded-4 shadow-sm bg-white h-100">
       <div class="card-body p-4">
         <h6 class="fw-bold text-dark mb-1" style="font-size: 1rem;">
-          <i class="fa fa-chart-bar me-2 text-primary"></i>Enrollment Count per Program
+          <i class="fa fa-chart-line me-2" style="color: #8b5cf6;"></i>Student Registrations Over Time
         </h6>
-        <p class="text-muted small mb-3">Distribution of students enrolled across academic programs</p>
+        <p class="text-muted small mb-3">Monthly new student sign-ups for the past 12 months</p>
         <div style="position: relative; height: 300px;">
-          <canvas id="enrollmentChart"></canvas>
+          <canvas id="monthlyChart"></canvas>
         </div>
       </div>
     </div>
@@ -120,21 +120,6 @@
 
 <div class="row g-4 mb-4">
 
-  <!-- MONTHLY REGISTRATIONS (Line Chart) -->
-  <div class="col-xl-8 col-lg-7">
-    <div class="card border-0 rounded-4 shadow-sm bg-white h-100">
-      <div class="card-body p-4">
-        <h6 class="fw-bold text-dark mb-1" style="font-size: 1rem;">
-          <i class="fa fa-chart-line me-2" style="color: #8b5cf6;"></i>Student Registrations Over Time
-        </h6>
-        <p class="text-muted small mb-3">Monthly new student sign-ups for the past 12 months</p>
-        <div style="position: relative; height: 300px;">
-          <canvas id="monthlyChart"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ROLE DISTRIBUTION (Doughnut) -->
   <div class="col-xl-4 col-lg-5">
     <div class="card border-0 rounded-4 shadow-sm bg-white h-100">
@@ -154,10 +139,7 @@
 
 
 
-<footer class="admin-canvas-footer mt-4">
-  <div>&copy; 2024, made with by <strong>SchoolAdmin</strong> for a better future.</div>
-  <div><a href="#">SchoolAdmin</a><a href="#">About Us</a></div>
-</footer>
+
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -165,47 +147,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   const chartColors = ['#2563eb', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6'];
 
-  // 1. Enrollment per Course (Bar)
-  new Chart(document.getElementById('enrollmentChart'), {
-    type: 'bar',
-    data: {
-      labels: {{ enrollment_labels | tojson }},
-      datasets: [{
-        label: 'Enrolled Students',
-        data: {{ enrollment_counts | tojson }},
-        backgroundColor: chartColors.slice(0, {{ enrollment_labels | length }}),
-        borderRadius: 6,
-        borderSkipped: false,
-        barThickness: 40
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1e293b',
-          titleFont: { weight: 'bold' },
-          padding: 10,
-          cornerRadius: 8
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { stepSize: 1, color: '#94a3b8', font: { size: 12 } },
-          grid: { color: '#f1f5f9' }
-        },
-        x: {
-          ticks: { color: '#475569', font: { size: 11, weight: '600' } },
-          grid: { display: false }
-        }
-      }
-    }
-  });
-
-  // 2. Monthly Registrations (Line)
+  // 1. Monthly Registrations (Line)
   new Chart(document.getElementById('monthlyChart'), {
     type: 'line',
     data: {
