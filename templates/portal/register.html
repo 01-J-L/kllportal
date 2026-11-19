@@ -17,6 +17,7 @@
       <p class="text-muted small mb-4">Create your official student portal account</p>
 
       <form method="POST" action="{{ url_for('register') }}">
+{{ csrf_input() }}
         
         <!-- Full Name -->
         <label class="form-label">Full Name</label>

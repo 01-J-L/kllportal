@@ -9,19 +9,30 @@
   <h2 class="admin-panel-title">Users Management</h2>
 
   <!-- Green CREATE NEW USER Button -->
-  <button class="btn-admin-green mb-3" data-bs-toggle="modal" data-bs-target="#createUserModal">
-    CREATE NEW USER
-  </button>
+  <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <button class="btn-admin-green" data-bs-toggle="modal" data-bs-target="#createUserModal">
+      CREATE NEW USER
+    </button>
+    <a href="{{ url_for('admin_enrollments') }}" class="btn-admin-outline">
+      <i class="fa fa-user-graduate me-1"></i> STUDENT ENROLLMENT
+    </a>
+    <div class="admin-table-search ms-md-auto">
+      <i class="fa fa-search"></i>
+      <input type="search" class="form-control" placeholder="Search name, email, role or program..."
+             data-table-search="#usersTable" aria-label="Search users">
+    </div>
+  </div>
 
   <!-- TABLE -->
   <div class="table-responsive">
-    <table class="admin-data-table">
+    <table class="admin-data-table" id="usersTable">
       <thead>
         <tr>
           <th>NAME</th>
           <th>EMAIL</th>
           <th>PHONE</th>
           <th class="text-center">ROLES</th>
+          <th>PROGRAM</th>
           <th class="text-center">STATUS</th>
           <th class="text-center">ACTION</th>
         </tr>
@@ -36,6 +47,17 @@
             <span class="role-badge-pill">
               {{ u.role.replace('_', ' ') }}
             </span>
+          </td>
+          <td>
+            {% if u.role == 'STUDENT' %}
+              {% if u.program_id %}
+                <span class="program-pill" title="{{ u.program_name }}">{{ u.program_code }}</span>
+              {% else %}
+                <span class="text-muted small fst-italic">Not assigned</span>
+              {% endif %}
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
           </td>
           <td class="text-center">
             <span class="badge {{ 'bg-success' if u.status == 'Active' else 'bg-danger' }}">
@@ -54,7 +76,8 @@
             </button>
 
             <!-- 3. Red DELETE Button -->
-            <form action="{{ url_for('admin_delete_user', id=u.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete user: {{ u.name }}?');">
+            <form action="{{ url_for('admin_delete_user', id=u.id) }}" method="POST" class="d-inline" data-confirm="Permanently delete user: {{ u.name }}?">
+{{ csrf_input() }}
               <button class="btn-tbl-delete" type="submit">
                 DELETE
               </button>
@@ -88,6 +111,7 @@
       </div>
 
       <form action="{{ url_for('admin_edit_user', id=u.id) }}" method="POST">
+{{ csrf_input() }}
         <div class="modal-body p-4 text-start" style="background: #ffffff;">
           <div class="row g-3">
             
@@ -113,7 +137,7 @@
 
             <div class="col-md-6">
               <label class="form-label small fw-bold text-secondary">ROLE</label>
-              <select name="role" class="form-select" required>
+              <select name="role" class="form-select" required data-role-toggle>
                 <option value="STUDENT" {% if u.role == 'STUDENT' %}selected{% endif %}>STUDENT</option>
                 <option value="TEACHER" {% if u.role == 'TEACHER' %}selected{% endif %}>TEACHER</option>
                 <option value="ADMIN" {% if u.role == 'ADMIN' %}selected{% endif %}>ADMIN</option>
@@ -127,6 +151,22 @@
                 <option value="Active" {% if u.status == 'Active' %}selected{% endif %}>Active</option>
                 <option value="Suspended" {% if u.status == 'Suspended' %}selected{% endif %}>Suspended</option>
               </select>
+            </div>
+
+            <div class="col-12" data-student-only>
+              <label class="form-label small fw-bold text-secondary">ASSIGNED COURSE / ACADEMIC PROGRAM</label>
+              <select name="course_id" class="form-select" data-searchable data-search-min="6">
+                <option value="" {% if not u.program_id %}selected{% endif %}>— No program assigned —</option>
+                {% for p in programs %}
+                <option value="{{ p.id }}" {% if u.program_id == p.id %}selected{% endif %}>{{ p.course_name }} ({{ p.course_code }})</option>
+                {% endfor %}
+                {% if u.program_id and not u.program_active %}
+                <option value="{{ u.program_id }}" selected>{{ u.program_name }} ({{ u.program_code }}) — inactive</option>
+                {% endif %}
+              </select>
+              <div class="form-text">
+                {% if u.program_id %}Enrolled since {{ u.program_enrolled_at|fmt_date }}. Choose another program to transfer the student, or "No program" to remove the assignment.{% else %}Only active programs are listed.{% endif %}
+              </div>
             </div>
 
           </div>
@@ -208,6 +248,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form action="{{ url_for('admin_create_user') }}" method="POST">
+{{ csrf_input() }}
         <div class="modal-body p-4 text-start" style="background: #ffffff;">
           <div class="row g-3">
             <div class="col-md-6">
@@ -226,14 +267,31 @@
               <label class="form-label small fw-bold text-secondary">PASSWORD</label>
               <input type="password" name="password" class="form-control" placeholder="Create password" required>
             </div>
-            <div class="col-md-12">
+            <div class="col-md-6">
               <label class="form-label small fw-bold text-secondary">SELECT ROLE</label>
-              <select name="role" class="form-select" required>
+              <select name="role" class="form-select" required data-role-toggle>
                 <option value="STUDENT">STUDENT</option>
                 <option value="TEACHER">TEACHER</option>
                 <option value="ADMIN">ADMIN</option>
                 <option value="SUPER_ADMIN">SUPER ADMIN</option>
               </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">ACCOUNT STATUS</label>
+              <select name="status" class="form-select" required>
+                <option value="Active" selected>Active</option>
+                <option value="Suspended">Suspended</option>
+              </select>
+            </div>
+            <div class="col-12" data-student-only>
+              <label class="form-label small fw-bold text-secondary">ASSIGNED COURSE / ACADEMIC PROGRAM</label>
+              <select name="course_id" class="form-select" data-searchable data-search-min="6">
+                <option value="" selected>— No program assigned —</option>
+                {% for p in programs %}
+                <option value="{{ p.id }}">{{ p.course_name }} ({{ p.course_code }})</option>
+                {% endfor %}
+              </select>
+              <div class="form-text">Only active programs are listed.</div>
             </div>
           </div>
         </div>

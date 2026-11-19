@@ -10,6 +10,23 @@ class Config:
     UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max limit
 
+    # --- Session / CSRF hardening ---
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+
+    # --- Prospectus / curriculum documents ---
+    # Stored OUTSIDE static/ so files are only reachable through the
+    # authorised Flask routes (never by guessing a /static/... URL).
+    PROSPECTUS_FOLDER = os.environ.get(
+        'PROSPECTUS_FOLDER',
+        os.path.join(os.path.abspath(os.path.dirname(__file__)), 'protected_uploads', 'prospectus')
+    )
+    PROSPECTUS_MAX_BYTES = int(os.environ.get('PROSPECTUS_MAX_BYTES', 10 * 1024 * 1024))  # 10 MB
+    PROSPECTUS_ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc'}  # PDF is the primary format
+
+    # Run migrations/enrollment_prospectus_upgrade.sql automatically on start-up.
+    AUTO_MIGRATE = os.environ.get('KLL_AUTO_MIGRATE', '1') == '1'
+
     # Email Configuration (Gmail)
     MAIL_SERVER = 'smtp.gmail.com'
     MAIL_PORT = 587

@@ -10,6 +10,7 @@
     <p class="text-muted small mb-4">Manage top black bar contacts, social links, hero banner texts, and the global footer information.</p>
 
     <form action="{{ url_for('admin_update_site_settings') }}" method="POST" enctype="multipart/form-data">
+{{ csrf_input() }}
       
       <!-- 1. TOP BLACK CONTACT RIBBON & SOCIALS -->
       <div class="card border rounded-3 p-4 mb-4 bg-light shadow-sm">

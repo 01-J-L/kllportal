@@ -53,6 +53,7 @@
 
             <!-- 3. Red DELETE Button -->
             <form action="{{ url_for('admin_delete_calendar', id=ev.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete {{ ev.title }}?');">
+{{ csrf_input() }}
               <button class="btn-tbl-delete" type="submit">
                 DELETE
               </button>
@@ -119,6 +120,7 @@
 <div class="modal fade" id="editCal{{ ev.id }}" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <form class="modal-content border-0 shadow" action="{{ url_for('admin_edit_calendar', id=ev.id) }}" method="POST">
+{{ csrf_input() }}
       <div class="modal-header" style="background-color: #ec4899; color: #fff;">
         <h5 class="modal-title fw-bold">Edit Calendar Event</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -168,6 +170,7 @@
 <div class="modal fade" id="createCalendarModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <form class="modal-content border-0 shadow" action="{{ url_for('admin_create_calendar') }}" method="POST">
+{{ csrf_input() }}
       <div class="modal-header" style="background-color: #10b981; color: #fff;">
         <h5 class="modal-title fw-bold">Create Academic Calendar Event</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>

@@ -34,6 +34,7 @@
 
       <!-- Form -->
       <form method="POST" action="{{ url_for('admin_login') }}">
+{{ csrf_input() }}
         <div>
           <input 
             type="email" 

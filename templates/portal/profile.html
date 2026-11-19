@@ -32,26 +32,82 @@
 
           <div class="profile-field-row d-flex justify-content-between align-items-center py-2">
             <span class="profile-field-label text-muted small" style="font-size: 0.85rem;">Phone number</span>
-            <span class="profile-field-value fw-semibold text-dark text-end" style="font-size: 0.88rem;">{{ user.phone_number if (user and user.phone_number) else '0999192857' }}</span>
+            <span class="profile-field-value fw-semibold text-dark text-end" style="font-size: 0.88rem;">{{ user.phone_number if (user and user.phone_number) else '—' }}</span>
           </div>
 
-          <!-- Enrollment section hidden - no enrollment data yet -->
+          {% if is_student %}
           <div class="mt-4 pt-3 border-top">
             <h6 class="fw-bold mb-2 small text-dark"><i class="fa fa-graduation-cap me-1 text-primary"></i> Enrolled Program</h6>
-            <p class="text-muted small mb-0">No enrollment data yet.</p>
+            {% if academic %}
+              <p class="mb-0 fw-semibold small">{{ academic.course_name }} <span class="program-pill">{{ academic.course_code }}</span></p>
+            {% else %}
+              <p class="text-muted small mb-0">Not assigned yet.</p>
+            {% endif %}
           </div>
+          {% endif %}
         </div>
       </div>
 
-      <!-- RIGHT: ENROLLMENT STATUS - Always shows "No Enrollment Data Yet" -->
+      <!-- RIGHT: ACADEMIC INFORMATION + PROSPECTUS (own record only) -->
       <div class="col-lg-8 col-md-7 ps-md-4">
-        <div class="user-profile-card shadow-sm p-5 bg-white rounded border text-center" style="border-radius: 6px;">
-          <div class="mb-3">
-            <i class="fa fa-clipboard-list text-muted" style="font-size: 3rem; opacity: 0.5;"></i>
-          </div>
-          <h5 class="fw-bold text-dark mb-2">No Enrollment Data Yet</h5>
-          <p class="text-muted mb-0" style="font-size: 0.95rem;">You are not currently enrolled in any academic program. Please contact the registrar's office or wait for enrollment instructions.</p>
+
+        {% if not is_student %}
+        <div class="user-profile-card shadow-sm p-4 bg-white rounded border text-center">
+          <p class="text-muted mb-0">Academic information is only available for student accounts.</p>
         </div>
+
+        {% elif academic %}
+        <div class="user-profile-card academic-info-card shadow-sm p-4 bg-white rounded border mb-4">
+          <h5 class="fw-bold mb-3 text-uppercase" style="letter-spacing:.5px;"><i class="fa fa-id-card me-2 text-success"></i>My Academic Information</h5>
+          <div class="row g-3">
+            <div class="col-sm-6"><div class="academic-field"><span>Student Name</span><strong>{{ user.name }}</strong></div></div>
+            <div class="col-sm-6"><div class="academic-field"><span>Student Email</span><strong>{{ user.email }}</strong></div></div>
+            <div class="col-sm-6"><div class="academic-field"><span>Student / Account ID</span><strong>{{ user.id }}</strong></div></div>
+            <div class="col-sm-6"><div class="academic-field"><span>Academic Program</span><strong>{{ academic.course_name }}</strong></div></div>
+            <div class="col-sm-6"><div class="academic-field"><span>Course Code</span><strong>{{ academic.course_code }}</strong></div></div>
+            <div class="col-sm-6"><div class="academic-field"><span>Enrollment Status</span><strong><span class="badge bg-success">{{ academic.enrollment_status }}</span></strong></div></div>
+            <div class="col-sm-6"><div class="academic-field"><span>Enrollment Date</span><strong>{{ academic.enrolled_at|fmt_date }}</strong></div></div>
+            <div class="col-sm-6"><div class="academic-field"><span>Available Prospectus / Curriculum</span><strong>{{ prospectus.document_title if prospectus else 'Not yet available' }}</strong></div></div>
+          </div>
+        </div>
+
+        <div class="user-profile-card academic-info-card shadow-sm p-4 bg-white rounded border" id="my-prospectus">
+          <h5 class="fw-bold mb-3 text-uppercase" style="letter-spacing:.5px;"><i class="fa fa-file-pdf me-2 text-danger"></i>My Curriculum / Prospectus</h5>
+          {% if prospectus %}
+            <p class="mb-1 fw-semibold fs-5">{{ academic.course_name }}</p>
+            <p class="mb-1 text-muted">Official Curriculum: <strong class="text-dark">{{ prospectus.document_title }}</strong></p>
+            <p class="mb-3 text-muted small">
+              Format: <strong>{{ prospectus.file_type|upper }}</strong>
+              · {{ prospectus.file_size|filesize }}
+              {% if prospectus.academic_year %}· Academic year {{ prospectus.academic_year }}{% endif %}
+              · Version {{ prospectus.version }}
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+              {% if prospectus.file_type == 'pdf' %}
+              <a href="{{ url_for('student_prospectus_view') }}" target="_blank" rel="noopener" class="btn btn-outline-primary fw-semibold">
+                <i class="fa fa-eye me-1"></i> VIEW PROSPECTUS
+              </a>
+              {% endif %}
+              <a href="{{ url_for('student_prospectus_download') }}" class="btn btn-success fw-semibold">
+                <i class="fa fa-download me-1"></i> DOWNLOAD PROSPECTUS
+              </a>
+            </div>
+          {% else %}
+            <div class="alert alert-info mb-0" role="status">
+              <i class="fa fa-info-circle me-1"></i>
+              The official prospectus for your academic program is not yet available. Please contact the Registrar's Office.
+            </div>
+          {% endif %}
+        </div>
+
+        {% else %}
+        <div class="user-profile-card shadow-sm p-5 bg-white rounded border text-center">
+          <div class="mb-3"><i class="fa fa-clipboard-list text-muted" style="font-size: 3rem; opacity: 0.5;"></i></div>
+          <h5 class="fw-bold text-dark mb-2">No Academic Program Assigned</h5>
+          <p class="text-muted mb-0" style="font-size: 0.95rem;">No academic program has been assigned to your account yet. Please contact the Registrar's Office.</p>
+        </div>
+        {% endif %}
+
       </div>
 
     </div>

@@ -17,6 +17,7 @@
       <h4>Login Form</h4>
 
       <form method="POST" action="{{ url_for('login') }}">
+{{ csrf_input() }}
         <!-- Email Input -->
         <label class="form-label">Email address</label>
         <div class="input-group-custom">

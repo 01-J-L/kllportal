@@ -8,6 +8,7 @@
       <span class="badge bg-primary fs-6">{{ inquiries|length }} total</span>
       {% if inquiries %}
       <form action="{{ url_for('admin_clear_inquiries') }}" method="POST" onsubmit="return confirm('Clear ALL inquiries? This cannot be undone.');">
+{{ csrf_input() }}
         <button class="btn-tbl-delete" type="submit">CLEAR ALL</button>
       </form>
       {% endif %}
@@ -46,6 +47,7 @@
               SHOW
             </button>
             <form action="{{ url_for('admin_delete_inquiry', id=inq.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this inquiry?');">
+{{ csrf_input() }}
               <button class="btn-tbl-delete" type="submit">DELETE</button>
             </form>
           </td>

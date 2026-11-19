@@ -50,6 +50,7 @@
               EDIT
             </button>
             <form action="{{ url_for('admin_delete_handbook', id=hb.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete {{ hb.title }}?');">
+{{ csrf_input() }}
               <button class="btn-tbl-delete" type="submit">
                 DELETE
               </button>
@@ -116,6 +117,7 @@
 <div class="modal fade" id="editHandbookModal{{ hb.id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <form class="modal-content" action="{{ url_for('admin_edit_handbook', id=hb.id) }}" method="POST" enctype="multipart/form-data">
+{{ csrf_input() }}
       <div class="modal-header modal-header-edit">
         <h5 class="modal-title fw-bold"><i class="fa fa-pen me-2"></i>Edit Handbook: {{ hb.title }}</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -169,6 +171,7 @@
 <div class="modal fade" id="createHandbookModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <form class="modal-content" action="{{ url_for('admin_create_handbook') }}" method="POST" enctype="multipart/form-data">
+{{ csrf_input() }}
       <div class="modal-header modal-header-create">
         <h5 class="modal-title fw-bold"><i class="fa fa-plus-circle me-2"></i>Upload Handbook PDF</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>

@@ -16,6 +16,7 @@
       </button>
       {% if admission_file %}
       <form action="{{ url_for('admin_delete_admission_file') }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently remove this admission document?');">
+{{ csrf_input() }}
         <button type="submit" class="btn-tbl-delete text-white">
           <i class="fa fa-trash me-1"></i> DELETE FILE
         </button>
@@ -113,6 +114,7 @@
               EDIT
             </button>
             <form action="{{ url_for('admin_delete_about', id=ab.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete {{ ab.title }}?');">
+{{ csrf_input() }}
               <button class="btn-tbl-delete" type="submit">
                 DELETE
               </button>
@@ -133,6 +135,7 @@
 <div class="modal fade" id="editAdmissionFileModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <form class="modal-content" action="{{ url_for('admin_update_admission_file') }}" method="POST" enctype="multipart/form-data">
+{{ csrf_input() }}
       <div class="modal-header modal-header-edit">
         <h5 class="modal-title fw-bold">
           <i class="fa fa-file-pdf me-2"></i>Upload Admission Form
@@ -163,6 +166,7 @@
 <div class="modal fade" id="editOrgChartModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <form class="modal-content" action="{{ url_for('admin_update_org_chart') }}" method="POST" enctype="multipart/form-data">
+{{ csrf_input() }}
       <div class="modal-header modal-header-edit">
         <h5 class="modal-title fw-bold">
           <i class="fa fa-sitemap me-2"></i>Update School Organizational Chart
@@ -226,6 +230,7 @@
 <div class="modal fade" id="editAboutModal{{ ab.id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <form class="modal-content" action="{{ url_for('admin_edit_about', id=ab.id) }}" method="POST">
+{{ csrf_input() }}
       <div class="modal-header modal-header-edit">
         <h5 class="modal-title fw-bold"><i class="fa fa-pen me-2"></i>Edit: {{ ab.title }}</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -263,6 +268,7 @@
 <div class="modal fade" id="createAboutModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <form class="modal-content" action="{{ url_for('admin_create_about') }}" method="POST">
+{{ csrf_input() }}
       <div class="modal-header modal-header-create">
         <h5 class="modal-title fw-bold"><i class="fa fa-plus-circle me-2"></i>Add About Section</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>

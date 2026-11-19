@@ -59,6 +59,7 @@
         <h2 class="contact-form-title">Send Us A Message</h2>
 
         <form action="{{ url_for('contact') }}" method="POST">
+{{ csrf_input() }}
           <div class="row">
             <div class="col-md-6">
               <input type="text" name="name" class="form-line-input" placeholder="Your Name" required>

@@ -1,16 +1,33 @@
 import os
+import io
+import re
+import uuid
+import hmac
+import secrets
+import zipfile
+from datetime import datetime
+from urllib.parse import urlparse
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import (Flask, render_template, request, redirect, url_for, session,
+                   flash, jsonify, send_file, abort)
+from markupsafe import Markup
 from flask_mysqldb import MySQL
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import RequestEntityTooLarge
 from config import Config
+
+try:  # mysqlclient (installed with Flask-MySQLdb)
+    from MySQLdb import IntegrityError as DBIntegrityError
+except ImportError:  # pragma: no cover - only if the driver is missing
+    DBIntegrityError = ()
 
 app = Flask(__name__)
 app.config.from_object(Config)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['PROSPECTUS_FOLDER'], exist_ok=True)
 mysql = MySQL(app)
 mail = Mail(app)
 
@@ -121,6 +138,43 @@ with app.app_context():
         cur.close()
     except Exception:
         pass
+
+def run_sql_migration(path):
+    """Run an idempotent .sql migration file statement by statement.
+
+    The file must follow the conventions documented at the top of
+    migrations/enrollment_prospectus_upgrade.sql (';'-terminated statements,
+    no DELIMITER blocks). Failures are logged loudly but never stop the app.
+    """
+    try:
+        with open(path, encoding='utf-8') as fh:
+            lines = [ln for ln in fh.read().splitlines() if not ln.strip().startswith('--')]
+    except OSError as err:
+        print(f"[MIGRATION] Cannot read {path}: {err}")
+        return False
+    statements = [s.strip() for s in '\n'.join(lines).split(';') if s.strip()]
+    ok = True
+    with app.app_context():
+        cur = mysql.connection.cursor()
+        for stmt in statements:
+            try:
+                cur.execute(stmt)
+            except Exception as err:
+                ok = False
+                print(f"[MIGRATION] FAILED: {stmt[:90]!r} -> {err}")
+                break
+        try:
+            mysql.connection.commit()
+        except Exception:
+            pass
+        cur.close()
+    print(f"[MIGRATION] {os.path.basename(path)}: {'OK' if ok else 'INCOMPLETE - run it manually and check the error above'}")
+    return ok
+
+
+if app.config.get('AUTO_MIGRATE'):
+    run_sql_migration(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   'migrations', 'enrollment_prospectus_upgrade.sql'))
 
 def teacher_required(f):
     @wraps(f)
@@ -270,6 +324,77 @@ def inject_site_settings():
         'footer_email': get_site_setting('footer_email'),
         'footer_map_url': clean_map_url(get_site_setting('footer_map_url'))
     }
+
+# ==================== CSRF PROTECTION ==================== #
+# Session-bound token, checked on every state-changing request. Templates add
+# it with {{ csrf_input() }} inside each <form method="POST">; AJAX callers
+# may send it in the X-CSRFToken header. No extra dependency required.
+def _get_csrf_token():
+    token = session.get('_csrf_token')
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session['_csrf_token'] = token
+    return token
+
+
+@app.context_processor
+def inject_csrf():
+    return {
+        'csrf_token': _get_csrf_token,
+        'csrf_input': lambda: Markup(
+            '<input type="hidden" name="csrf_token" value="%s">' % _get_csrf_token()),
+    }
+
+
+def _safe_back(default_endpoint='home'):
+    """Redirect target: the referring page if it is on this host, else a default."""
+    ref = request.referrer
+    if ref and urlparse(ref).netloc == request.host:
+        return ref
+    return url_for(default_endpoint)
+
+
+@app.before_request
+def csrf_protect():
+    if request.method in ('GET', 'HEAD', 'OPTIONS'):
+        return None
+    sent = request.form.get('csrf_token') or request.headers.get('X-CSRFToken') or ''
+    expected = session.get('_csrf_token', '')
+    if not expected or not hmac.compare_digest(sent.encode(), expected.encode()):
+        app.logger.warning('CSRF check failed for %s %s', request.method, request.path)
+        flash('Your session expired or the request could not be verified. Please try again.', 'danger')
+        return redirect(_safe_back(), code=303)
+    return None
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_too_large(_err):
+    limit_mb = app.config['MAX_CONTENT_LENGTH'] // (1024 * 1024)
+    flash(f'The uploaded file is too large (the server limit is {limit_mb} MB).', 'danger')
+    return redirect(_safe_back(), code=303)
+
+
+# ==================== TEMPLATE FILTERS ==================== #
+@app.template_filter('fmt_date')
+def fmt_date(value):
+    """'November 14, 2026' from a datetime (MySQL) or ISO string."""
+    if not value:
+        return '—'
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value[:19])
+        except ValueError:
+            return value
+    return f"{value:%B} {value.day}, {value.year}"
+
+
+@app.template_filter('filesize')
+def filesize(num):
+    num = int(num or 0)
+    if num >= 1024 * 1024:
+        return f"{num / (1024 * 1024):.1f} MB"
+    return f"{max(1, round(num / 1024))} KB" if num else '0 KB'
+
 
 # ==================== PUBLIC HOME ROUTE ==================== #
 @app.route('/')
@@ -551,30 +676,27 @@ def profile():
     cur.execute("SELECT * FROM users WHERE id = %s", (session['user_id'],))
     user = cur.fetchone()
 
-    enrolled_courses = []
+    if not user:
+        cur.close()
+        session.clear()
+        flash('Your account could not be found. Please log in again.', 'warning')
+        return redirect(url_for('login'))
+
+    academic = None          # the student's CURRENT program (own record only)
+    prospectus = None        # published curriculum of that program
     recommendations = []
+    is_student = user['role'] == 'STUDENT'
 
-    if user:
-        # 1. Fetch only courses the current user is ACTUALLY enrolled in
-        try:
-            cur.execute("""
-                SELECT c.id, c.course_code, c.course_name, c.description, e.enrolled_at
-                FROM enrollments e
-                JOIN courses c ON e.course_id = c.id
-                WHERE e.student_id = %s
-                ORDER BY e.enrolled_at DESC
-            """, (user['id'],))
-            enrolled_courses = cur.fetchall()
-        except Exception as err:
-            print(f"Enrollment query error: {err}")
-            enrolled_courses = []
+    if is_student:
+        # Always keyed on the authenticated session user - never on a request parameter.
+        academic = get_student_enrollment(cur, user['id'])
 
-        # 2. ONLY generate recommendations IF the student is ACTUALLY enrolled
-        if enrolled_courses:
-            # Recommend student clubs
+        if academic:
+            prospectus = get_student_prospectus(cur, user['id'])
+
+            # Recommendations are only generated for enrolled students (unchanged behaviour)
             cur.execute("SELECT id, name, details FROM clubs WHERE is_active = 1 LIMIT 2")
-            clubs = cur.fetchall()
-            for club in clubs:
+            for club in cur.fetchall():
                 recommendations.append({
                     'icon': 'fa-users',
                     'color': '#10b981',
@@ -584,10 +706,8 @@ def profile():
                     'badge': 'Club'
                 })
 
-            # Recommend latest campus bulletins
             cur.execute("SELECT id, title, content FROM news WHERE is_active = 1 ORDER BY id DESC LIMIT 2")
-            news_items = cur.fetchall()
-            for article in news_items:
+            for article in cur.fetchall():
                 recommendations.append({
                     'icon': 'fa-newspaper',
                     'color': '#f59e0b',
@@ -602,7 +722,9 @@ def profile():
     return render_template(
         'portal/profile.html',
         user=user,
-        enrolled_courses=enrolled_courses,
+        is_student=is_student,
+        academic=academic,
+        prospectus=prospectus,
         recommendations=recommendations
     )
 
@@ -981,54 +1103,180 @@ def admin_delete_event(id):
     return redirect(url_for('admin_events'))
 
 # --- USERS CRUD ---
+USER_ROLES = ('STUDENT', 'TEACHER', 'ADMIN', 'SUPER_ADMIN')
+USER_STATUSES = ('Active', 'Suspended')
+EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+
 @app.route('/admin/users')
 @admin_required
 def admin_users():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM users ORDER BY id DESC")
+    # One row per user + that user's CURRENT program (if any), straight from the database.
+    cur.execute("""
+        SELECT u.*,
+               e.course_id    AS program_id,
+               e.enrolled_at  AS program_enrolled_at,
+               c.course_code  AS program_code,
+               c.course_name  AS program_name,
+               c.is_active    AS program_active
+        FROM users u
+        LEFT JOIN enrollments e ON e.student_id = u.id AND e.is_current = 1
+        LEFT JOIN courses c     ON c.id = e.course_id
+        ORDER BY u.id DESC
+    """)
     users = cur.fetchall()
+    programs = get_active_programs(cur)
     cur.close()
-    return render_template('admin/users.html', users=users)
+    return render_template('admin/users.html', users=users, programs=programs)
+
 
 @app.route('/admin/users/create', methods=['POST'])
 @admin_required
 def admin_create_user():
-    name = request.form.get('name')
-    email = request.form.get('email')
-    password = request.form.get('password')
-    phone = request.form.get('phone_number')
-    role = request.form.get('role')
-    pw_hash = generate_password_hash(password)
+    name = (request.form.get('name') or '').strip()
+    email = (request.form.get('email') or '').strip().lower()
+    password = request.form.get('password') or ''
+    phone = (request.form.get('phone_number') or '').strip()
+    role = request.form.get('role') or 'STUDENT'
+    status = request.form.get('status') or 'Active'
+
+    error = None
+    if not name or not email or not password:
+        error = 'Full name, email address and password are required.'
+    elif not EMAIL_RE.match(email):
+        error = 'Please enter a valid email address.'
+    elif len(password) < 6:
+        error = 'Password must be at least 6 characters.'
+    elif role not in USER_ROLES:
+        error = 'Invalid role selected.'
+    elif status not in USER_STATUSES:
+        error = 'Invalid account status selected.'
+    if error:
+        flash(error, 'danger')
+        return redirect(url_for('admin_users'))
 
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO users (name, email, password_hash, phone_number, role, status) VALUES (%s, %s, %s, %s, %s, 'Active')",
-                (name, email, pw_hash, phone, role))
-    mysql.connection.commit()
+    program_result = None
+    try:
+        cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+        if cur.fetchone():
+            flash('That email address is already registered.', 'danger')
+            cur.close()
+            return redirect(url_for('admin_users'))
+
+        course_id = parse_program_id(request.form.get('course_id')) if 'course_id' in request.form else None
+        if course_id is not None and role != 'STUDENT':
+            raise ProgramAssignmentError('Only student accounts can be assigned an academic program.')
+
+        cur.execute("INSERT INTO users (name, email, password_hash, phone_number, role, status) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (name, email, generate_password_hash(password), phone, role, status))
+        new_id = cur.lastrowid
+        if course_id is not None:
+            program_result = set_student_program(cur, new_id, course_id, session['user_id'])
+        mysql.connection.commit()
+    except ProgramAssignmentError as err:
+        mysql.connection.rollback()
+        cur.close()
+        flash(str(err), 'danger')
+        return redirect(url_for('admin_users'))
+    except DBIntegrityError:
+        mysql.connection.rollback()
+        cur.close()
+        flash('That email address is already registered.', 'danger')
+        return redirect(url_for('admin_users'))
+    except Exception:
+        mysql.connection.rollback()
+        cur.close()
+        app.logger.exception('admin_create_user failed')
+        flash('Could not create the user because of a server error. Nothing was saved.', 'danger')
+        return redirect(url_for('admin_users'))
     cur.close()
+
     flash('User registered.', 'success')
+    if program_result:
+        flash('Student academic program successfully updated.', 'success')
     return redirect(url_for('admin_users'))
+
 
 @app.route('/admin/users/edit/<int:id>', methods=['POST'])
 @admin_required
 def admin_edit_user(id):
-    name = request.form.get('name')
-    email = request.form.get('email')
-    phone = request.form.get('phone_number')
-    role = request.form.get('role')
-    status = request.form.get('status')
-    password = request.form.get('password')
+    name = (request.form.get('name') or '').strip()
+    email = (request.form.get('email') or '').strip().lower()
+    phone = (request.form.get('phone_number') or '').strip()
+    role = request.form.get('role') or ''
+    status = request.form.get('status') or ''
+    password = request.form.get('password') or ''
 
     cur = mysql.connection.cursor()
-    if password:
-        pw_hash = generate_password_hash(password)
-        cur.execute("UPDATE users SET name=%s, email=%s, phone_number=%s, role=%s, status=%s, password_hash=%s WHERE id=%s",
-                    (name, email, phone, role, status, pw_hash, id))
-    else:
-        cur.execute("UPDATE users SET name=%s, email=%s, phone_number=%s, role=%s, status=%s WHERE id=%s",
-                    (name, email, phone, role, status, id))
-    mysql.connection.commit()
+    cur.execute("SELECT id, status FROM users WHERE id = %s", (id,))
+    existing = cur.fetchone()
+    if not existing:
+        cur.close()
+        flash('User not found.', 'danger')
+        return redirect(url_for('admin_users'))
+
+    error = None
+    if not name or not email:
+        error = 'Full name and email address are required.'
+    elif not EMAIL_RE.match(email):
+        error = 'Please enter a valid email address.'
+    elif role not in USER_ROLES:
+        error = 'Invalid role selected.'
+    elif status not in USER_STATUSES and status != existing['status']:
+        error = 'Invalid account status selected.'
+    elif password and len(password) < 6:
+        error = 'Password must be at least 6 characters.'
+    if error:
+        cur.close()
+        flash(error, 'danger')
+        return redirect(url_for('admin_users'))
+
+    program_result = None
+    try:
+        cur.execute("SELECT id FROM users WHERE email = %s AND id <> %s", (email, id))
+        if cur.fetchone():
+            raise ProgramAssignmentError('That email address is already used by another account.')
+
+        # Only touch the enrollment when the form actually carried the dropdown,
+        # so an untouched / absent field never wipes an existing assignment.
+        wants_program = 'course_id' in request.form
+        course_id = parse_program_id(request.form.get('course_id')) if wants_program else None
+        if wants_program and course_id is not None and role != 'STUDENT':
+            raise ProgramAssignmentError('Only student accounts can be assigned an academic program.')
+
+        if password:
+            cur.execute("UPDATE users SET name=%s, email=%s, phone_number=%s, role=%s, status=%s, password_hash=%s WHERE id=%s",
+                        (name, email, phone, role, status, generate_password_hash(password), id))
+        else:
+            cur.execute("UPDATE users SET name=%s, email=%s, phone_number=%s, role=%s, status=%s WHERE id=%s",
+                        (name, email, phone, role, status, id))
+
+        if wants_program and role == 'STUDENT':
+            program_result = set_student_program(cur, id, course_id, session['user_id'])
+        mysql.connection.commit()
+    except ProgramAssignmentError as err:
+        mysql.connection.rollback()
+        cur.close()
+        flash(str(err), 'danger')
+        return redirect(url_for('admin_users'))
+    except DBIntegrityError:
+        mysql.connection.rollback()
+        cur.close()
+        flash('Could not save: that email address or enrollment already exists.', 'danger')
+        return redirect(url_for('admin_users'))
+    except Exception:
+        mysql.connection.rollback()
+        cur.close()
+        app.logger.exception('admin_edit_user failed')
+        flash('Could not update the user because of a server error. Nothing was saved.', 'danger')
+        return redirect(url_for('admin_users'))
     cur.close()
+
     flash('User updated.', 'success')
+    if program_result in ('assigned', 'changed', 'removed'):
+        flash('Student academic program successfully updated.', 'success')
     return redirect(url_for('admin_users'))
 
 @app.route('/admin/users/delete/<int:id>', methods=['POST'])
@@ -1051,9 +1299,19 @@ def admin_courses():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM courses ORDER BY id ASC")
     courses = cur.fetchall()
-    cur.close()
-    return render_template('admin/courses.html', courses=courses)
 
+    # All prospectus versions, newest first, grouped per program (one query, not N).
+    cur.execute("""
+        SELECT d.*, u.name AS uploader_name
+        FROM course_documents d
+        LEFT JOIN users u ON u.id = d.uploaded_by
+        ORDER BY d.course_id ASC, d.version DESC
+    """)
+    documents = {}
+    for d in cur.fetchall():
+        documents.setdefault(d['course_id'], []).append(d)
+    cur.close()
+    return render_template('admin/courses.html', courses=courses, documents=documents)
 
 @app.route('/admin/courses/create', methods=['POST'])
 @admin_required
@@ -1106,9 +1364,23 @@ def admin_edit_course(id):
 @admin_required
 def admin_delete_course(id):
     cur = mysql.connection.cursor()
+    # Deleting a program would silently cascade-delete every student's enrollment
+    # history for it, so refuse and point the admin to the safe alternative.
+    cur.execute("SELECT COUNT(*) AS n FROM enrollments WHERE course_id = %s", (id,))
+    enrollment_count = cur.fetchone()['n']
+    if enrollment_count:
+        cur.close()
+        flash(f'This program has {enrollment_count} enrollment record(s) and cannot be deleted. '
+              'Reassign or remove its students, or mark the program Inactive instead.', 'danger')
+        return redirect(url_for('admin_courses'))
+
+    cur.execute("SELECT file_path FROM course_documents WHERE course_id = %s", (id,))
+    stored_files = [r['file_path'] for r in cur.fetchall()]
     cur.execute("DELETE FROM courses WHERE id = %s", (id,))
     mysql.connection.commit()
     cur.close()
+    for rel_path in stored_files:          # don't leave orphaned prospectus files behind
+        _remove_prospectus_file(rel_path)
     flash('Course program removed.', 'info')
     return redirect(url_for('admin_courses'))
 
@@ -1662,6 +1934,548 @@ def admin_delete_advisory(id):
     cur.close()
     flash('Advisory deleted.', 'info')
     return redirect(url_for('admin_advisories'))
+
+# ====================================================================== #
+#  ENROLLMENT: PROGRAM ASSIGNMENT (service layer + admin routes)          #
+# ====================================================================== #
+# Data model (existing `enrollments` table, extended by the migration):
+#   * one CURRENT row per student  -> is_current = 1, enrollment_status 'Enrolled'
+#   * history rows are kept        -> is_current = NULL, status 'Transferred' / 'Withdrawn'
+#   * UNIQUE (student_id, is_current) makes a second current row impossible.
+ENROLLMENT_STATUSES = ('Enrolled', 'Transferred', 'Withdrawn')
+
+
+class ProgramAssignmentError(Exception):
+    """A validation problem with a program assignment (message is shown to the admin)."""
+
+
+def parse_program_id(raw):
+    """'' -> None (no program); '12' -> 12; anything else is rejected."""
+    raw = (raw or '').strip()
+    if raw == '':
+        return None
+    if not re.fullmatch(r'[0-9]{1,10}', raw):
+        raise ProgramAssignmentError('Invalid academic program selected.')
+    return int(raw)
+
+
+def get_active_programs(cur):
+    cur.execute("SELECT id, course_code, course_name FROM courses WHERE is_active = 1 ORDER BY course_name ASC")
+    return cur.fetchall()
+
+
+def set_student_program(cur, student_id, course_id, admin_id):
+    """Assign / change / remove a student's CURRENT program inside the caller's transaction.
+
+    The caller commits or rolls back. Returns one of
+    'assigned' | 'changed' | 'removed' | 'unchanged'.
+    """
+    # Lock the student row so two admins cannot race each other.
+    cur.execute("SELECT id, role FROM users WHERE id = %s FOR UPDATE", (student_id,))
+    student = cur.fetchone()
+    if not student:
+        raise ProgramAssignmentError('Student account not found.')
+    if student['role'] != 'STUDENT':
+        raise ProgramAssignmentError('Academic programs can only be assigned to student accounts.')
+
+    cur.execute("SELECT id, course_id FROM enrollments WHERE student_id = %s AND is_current = 1", (student_id,))
+    current = cur.fetchone()
+
+    if course_id is None:                               # remove assignment
+        if not current:
+            return 'unchanged'
+        cur.execute("""UPDATE enrollments
+                       SET enrollment_status = 'Withdrawn', is_current = NULL, updated_at = NOW()
+                       WHERE id = %s""", (current['id'],))
+        return 'removed'
+
+    cur.execute("SELECT id, is_active FROM courses WHERE id = %s", (course_id,))
+    course = cur.fetchone()
+    if not course:
+        raise ProgramAssignmentError('The selected academic program does not exist.')
+
+    if current and current['course_id'] == course_id:   # nothing to do: keep the existing assignment
+        return 'unchanged'
+    if not course['is_active']:
+        raise ProgramAssignmentError('The selected academic program is not active.')
+
+    if current:                                         # keep history, never overwrite
+        cur.execute("""UPDATE enrollments
+                       SET enrollment_status = 'Transferred', is_current = NULL, updated_at = NOW()
+                       WHERE id = %s""", (current['id'],))
+    cur.execute("""INSERT INTO enrollments (student_id, course_id, enrollment_status, is_current, assigned_by)
+                   VALUES (%s, %s, 'Enrolled', 1, %s)""", (student_id, course_id, admin_id))
+    return 'changed' if current else 'assigned'
+
+
+def _run_program_change(student_id, raw_course_id):
+    """Transactional wrapper used by the stand-alone assign/remove routes."""
+    cur = mysql.connection.cursor()
+    try:
+        result = set_student_program(cur, student_id, parse_program_id(raw_course_id), session['user_id'])
+        mysql.connection.commit()
+        return result, None
+    except ProgramAssignmentError as err:
+        mysql.connection.rollback()
+        return None, str(err)
+    except DBIntegrityError:
+        mysql.connection.rollback()
+        return None, 'This student already has an active enrollment. Please refresh the page and try again.'
+    except Exception:
+        mysql.connection.rollback()
+        app.logger.exception('program assignment failed')
+        return None, 'Could not update the academic program because of a server error. Nothing was changed.'
+    finally:
+        cur.close()
+
+
+@app.route('/admin/students/<int:student_id>/program', methods=['POST'])
+@admin_required
+def admin_set_student_program(student_id):
+    """Assign or change a student's program (an empty value removes it)."""
+    result, error = _run_program_change(student_id, request.form.get('course_id'))
+    if error:
+        flash(error, 'danger')
+    elif result == 'unchanged':
+        flash('No change: the student already has that academic program.', 'info')
+    elif result == 'removed':
+        flash('Academic program assignment removed.', 'info')
+    else:
+        flash('Student academic program successfully updated.', 'success')
+    return redirect(_safe_back('admin_enrollments'))
+
+
+@app.route('/admin/students/<int:student_id>/program/remove', methods=['POST'])
+@admin_required
+def admin_remove_student_program(student_id):
+    result, error = _run_program_change(student_id, '')
+    if error:
+        flash(error, 'danger')
+    elif result == 'unchanged':
+        flash('This student has no assigned program.', 'info')
+    else:
+        flash('Academic program assignment removed.', 'info')
+    return redirect(_safe_back('admin_enrollments'))
+
+
+# ---------------------------------------------------------------------- #
+#  STUDENT ENROLLMENT MANAGEMENT (admin list, filters, summary)          #
+# ---------------------------------------------------------------------- #
+ENROLLMENTS_PER_PAGE = 15
+ENROLLMENT_SORTS = {
+    'newest': 'e.enrolled_at DESC, e.id DESC',
+    'oldest': 'e.enrolled_at ASC, e.id ASC',
+    'name':   'u.name ASC, e.id DESC',
+}
+
+
+def _like_pattern(term):
+    """Escape LIKE wildcards ('|' is the escape char - portable across SQL engines)."""
+    term = term.replace('|', '||').replace('%', '|%').replace('_', '|_')
+    return f'%{term}%'
+
+
+@app.route('/admin/enrollments')
+@admin_required
+def admin_enrollments():
+    raw_program = (request.args.get('program') or '').strip()
+    q = (request.args.get('q') or '').strip()[:100]
+    status = request.args.get('status') or 'Enrolled'
+    sort = request.args.get('sort') or 'newest'
+    try:
+        page = max(1, int(request.args.get('page', 1)))
+    except ValueError:
+        page = 1
+
+    program_id = int(raw_program) if re.fullmatch(r'[0-9]{1,10}', raw_program) else None
+    if status != 'All' and status not in ENROLLMENT_STATUSES:
+        status = 'Enrolled'
+    if sort not in ENROLLMENT_SORTS:
+        sort = 'newest'
+
+    where = ["u.role = 'STUDENT'"]
+    params = []
+    if status != 'All':
+        where.append("e.enrollment_status = %s")
+        params.append(status)
+    if program_id is not None:
+        where.append("e.course_id = %s")
+        params.append(program_id)
+    if q:
+        where.append("(u.name LIKE %s ESCAPE '|' OR u.email LIKE %s ESCAPE '|')")
+        params.extend([_like_pattern(q), _like_pattern(q)])
+    where_sql = ' AND '.join(where)
+
+    cur = mysql.connection.cursor()
+
+    cur.execute(f"""SELECT COUNT(*) AS n
+                    FROM enrollments e
+                    JOIN users u   ON u.id = e.student_id
+                    JOIN courses c ON c.id = e.course_id
+                    WHERE {where_sql}""", params)
+    total = cur.fetchone()['n']
+    total_pages = max(1, -(-total // ENROLLMENTS_PER_PAGE))
+    page = min(page, total_pages)
+
+    cur.execute(f"""SELECT e.id AS enrollment_id, e.enrolled_at, e.enrollment_status, e.is_current,
+                           u.id AS student_id, u.name, u.email, u.phone_number, u.status AS account_status,
+                           c.id AS course_id, c.course_code, c.course_name, c.is_active AS course_active
+                    FROM enrollments e
+                    JOIN users u   ON u.id = e.student_id
+                    JOIN courses c ON c.id = e.course_id
+                    WHERE {where_sql}
+                    ORDER BY {ENROLLMENT_SORTS[sort]}
+                    LIMIT %s OFFSET %s""",
+                params + [ENROLLMENTS_PER_PAGE, (page - 1) * ENROLLMENTS_PER_PAGE])
+    rows = cur.fetchall()
+
+    # ---- summary cards (all real counts) ----
+    cur.execute("SELECT COUNT(*) AS n FROM users WHERE role = 'STUDENT'")
+    total_students = cur.fetchone()['n']
+    cur.execute("""SELECT COUNT(*) AS n
+                   FROM users u
+                   WHERE u.role = 'STUDENT'
+                     AND EXISTS (SELECT 1 FROM enrollments e
+                                 WHERE e.student_id = u.id AND e.is_current = 1
+                                   AND e.enrollment_status = 'Enrolled')""")
+    total_enrolled = cur.fetchone()['n']
+    cur.execute("SELECT COUNT(*) AS n FROM courses WHERE is_active = 1")
+    active_programs = cur.fetchone()['n']
+
+    cur.execute("""SELECT c.id, c.course_code, c.course_name, c.is_active, COUNT(u.id) AS student_count
+                   FROM courses c
+                   LEFT JOIN enrollments e ON e.course_id = c.id AND e.is_current = 1
+                                          AND e.enrollment_status = 'Enrolled'
+                   LEFT JOIN users u ON u.id = e.student_id AND u.role = 'STUDENT'
+                   GROUP BY c.id, c.course_code, c.course_name, c.is_active
+                   ORDER BY c.course_name ASC""")
+    per_program = cur.fetchall()
+    programs = get_active_programs(cur)
+    cur.close()
+
+    # Only active programs can be assigned; keep ids to build the filter list of ALL programs.
+    qs = {k: v for k, v in (('program', str(program_id) if program_id is not None else ''),
+                            ('q', q), ('status', status), ('sort', sort)) if v}
+    return render_template(
+        'admin/enrollments.html',
+        rows=rows, total=total, page=page, total_pages=total_pages,
+        per_page=ENROLLMENTS_PER_PAGE,
+        total_students=total_students, total_enrolled=total_enrolled,
+        without_program=total_students - total_enrolled, active_programs=active_programs,
+        per_program=per_program, programs=programs,
+        filters={'program': program_id, 'q': q, 'status': status, 'sort': sort},
+        qs=qs, statuses=ENROLLMENT_STATUSES
+    )
+
+
+# ====================================================================== #
+#  PROSPECTUS / CURRICULUM DOCUMENTS                                      #
+# ====================================================================== #
+PROSPECTUS_MIME = {
+    'pdf':  'application/pdf',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'doc':  'application/msword',
+}
+# MIME types a browser may legitimately report for each extension.
+_CLIENT_MIME_OK = {
+    'pdf':  {'application/pdf', 'application/x-pdf', 'application/octet-stream'},
+    'docx': {PROSPECTUS_MIME['docx'], 'application/octet-stream'},
+    'doc':  {'application/msword', 'application/octet-stream'},
+}
+_ACADEMIC_YEAR_RE = re.compile(r'^[0-9A-Za-z][0-9A-Za-z /\-]{0,19}$')
+
+
+def validate_prospectus_upload(file_obj):
+    """Treat the upload as untrusted. Returns (ext, bytes, clean_original_name) or raises ValueError."""
+    if not file_obj or not file_obj.filename:
+        raise ValueError('Please choose a prospectus file to upload.')
+
+    original = file_obj.filename.replace('\\', '/').rsplit('/', 1)[-1]
+    ext = original.rsplit('.', 1)[-1].lower() if '.' in original else ''
+    if ext not in app.config['PROSPECTUS_ALLOWED_EXTENSIONS']:
+        raise ValueError('Invalid file type. Only PDF, DOCX or DOC files can be uploaded.')
+
+    client_mime = (file_obj.mimetype or 'application/octet-stream').lower()
+    if client_mime not in _CLIENT_MIME_OK[ext]:
+        raise ValueError('The file type reported by your browser does not match its extension.')
+
+    limit = app.config['PROSPECTUS_MAX_BYTES']
+    data = file_obj.stream.read(limit + 1)
+    if len(data) > limit:
+        raise ValueError(f'The file is too large. The maximum size is {limit // (1024 * 1024)} MB.')
+    if not data:
+        raise ValueError('The uploaded file is empty.')
+
+    # Content sniffing: the bytes must really be the claimed format (extension/MIME can be faked).
+    if ext == 'pdf':
+        valid = b'%PDF-' in data[:1024]
+    elif ext == 'doc':
+        valid = data.startswith(bytes.fromhex('D0CF11E0A1B11AE1'))
+    else:  # docx = zip container with the Word parts
+        try:
+            with zipfile.ZipFile(io.BytesIO(data)) as zf:
+                names = set(zf.namelist())
+            valid = '[Content_Types].xml' in names and 'word/document.xml' in names
+        except zipfile.BadZipFile:
+            valid = False
+    if not valid:
+        raise ValueError('The file content is not a valid %s document.' % ext.upper())
+
+    clean_name = (secure_filename(original) or f'prospectus.{ext}')[:200]
+    return ext, data, clean_name
+
+
+def _prospectus_root():
+    return os.path.realpath(app.config['PROSPECTUS_FOLDER'])
+
+
+def _resolve_prospectus_path(rel_path):
+    """Absolute path of a stored file, or None if it escapes the storage root / is missing."""
+    root = _prospectus_root()
+    full = os.path.realpath(os.path.join(root, rel_path or ''))
+    try:
+        if os.path.commonpath([root, full]) != root:
+            return None
+    except ValueError:                      # e.g. different drive on Windows
+        return None
+    return full if os.path.isfile(full) else None
+
+
+def _write_prospectus_file(rel_path, data):
+    full = os.path.join(_prospectus_root(), rel_path)
+    os.makedirs(os.path.dirname(full), exist_ok=True)
+    tmp = full + '.part'
+    with open(tmp, 'wb') as fh:
+        fh.write(data)
+    os.replace(tmp, full)
+
+
+def _remove_prospectus_file(rel_path):
+    full = _resolve_prospectus_path(rel_path)
+    if full:
+        try:
+            os.remove(full)
+        except OSError as err:
+            app.logger.warning('Could not remove prospectus file %s: %s', rel_path, err)
+
+
+def _send_prospectus(doc, inline):
+    """Stream a stored document. `doc` comes from the database, never from the browser."""
+    full = _resolve_prospectus_path(doc['file_path'])
+    if not full:
+        abort(404)
+    ext = doc['file_type']
+    base = secure_filename(f"{doc['course_code']}_{doc['document_title']}_v{doc['version']}") or 'prospectus'
+    resp = send_file(full, mimetype=PROSPECTUS_MIME.get(ext, 'application/octet-stream'),
+                     as_attachment=not (inline and ext == 'pdf'),
+                     download_name=f'{base}.{ext}', conditional=True, max_age=0)
+    resp.headers['X-Content-Type-Options'] = 'nosniff'
+    resp.headers['Cache-Control'] = 'private, no-cache'
+    return resp
+
+
+_DOC_COLUMNS = """d.id, d.course_id, d.document_title, d.original_filename, d.file_path, d.file_type,
+                  d.file_size, d.version, d.academic_year, d.is_current, d.is_published, d.created_at,
+                  c.course_code, c.course_name"""
+
+
+def get_student_enrollment(cur, student_id):
+    """The student's own current program (or None)."""
+    cur.execute("""SELECT e.id AS enrollment_id, e.enrolled_at, e.enrollment_status, e.academic_year, e.semester,
+                          c.id AS course_id, c.course_code, c.course_name
+                   FROM enrollments e
+                   JOIN courses c ON c.id = e.course_id
+                   WHERE e.student_id = %s AND e.is_current = 1 AND e.enrollment_status = 'Enrolled'""",
+                (student_id,))
+    return cur.fetchone()
+
+
+def get_student_prospectus(cur, student_id):
+    """The published, current prospectus of the student's OWN program (or None)."""
+    cur.execute(f"""SELECT {_DOC_COLUMNS}
+                    FROM enrollments e
+                    JOIN course_documents d ON d.course_id = e.course_id
+                    JOIN courses c          ON c.id = d.course_id
+                    WHERE e.student_id = %s AND e.is_current = 1 AND e.enrollment_status = 'Enrolled'
+                      AND d.is_current = 1 AND d.is_published = 1""", (student_id,))
+    return cur.fetchone()
+
+
+def _get_document(doc_id):
+    cur = mysql.connection.cursor()
+    cur.execute(f"""SELECT {_DOC_COLUMNS}
+                    FROM course_documents d JOIN courses c ON c.id = d.course_id
+                    WHERE d.id = %s""", (doc_id,))
+    doc = cur.fetchone()
+    cur.close()
+    return doc
+
+
+# ---- student side: no id in the URL, the program comes from the logged-in student's record ----
+def _student_prospectus_response(inline):
+    if session.get('role') != 'STUDENT':
+        abort(403)
+    cur = mysql.connection.cursor()
+    doc = get_student_prospectus(cur, session['user_id'])
+    cur.close()
+    if not doc:
+        abort(404)
+    return _send_prospectus(doc, inline)
+
+
+@app.route('/student/prospectus/view')
+@login_required
+def student_prospectus_view():
+    return _student_prospectus_response(inline=True)
+
+
+@app.route('/student/prospectus/download')
+@login_required
+def student_prospectus_download():
+    return _student_prospectus_response(inline=False)
+
+
+# ---- admin side ----
+@app.route('/admin/courses/documents/<int:doc_id>/view')
+@admin_required
+def admin_view_prospectus(doc_id):
+    doc = _get_document(doc_id)
+    if not doc:
+        abort(404)
+    return _send_prospectus(doc, inline=True)
+
+
+@app.route('/admin/courses/documents/<int:doc_id>/download')
+@admin_required
+def admin_download_prospectus(doc_id):
+    doc = _get_document(doc_id)
+    if not doc:
+        abort(404)
+    return _send_prospectus(doc, inline=False)
+
+
+@app.route('/admin/courses/<int:course_id>/documents/upload', methods=['POST'])
+@admin_required
+def admin_upload_prospectus(course_id):
+    """Upload a NEW version for a program (also used for 'Replace': older versions are archived, not deleted)."""
+    back = url_for('admin_courses')
+    try:
+        ext, data, original_name = validate_prospectus_upload(request.files.get('prospectus_file'))
+    except ValueError as err:
+        flash(str(err), 'danger')
+        return redirect(back)
+
+    title = (request.form.get('document_title') or '').strip()[:255]
+    academic_year = (request.form.get('academic_year') or '').strip()
+    if academic_year and not _ACADEMIC_YEAR_RE.match(academic_year):
+        flash('Academic year may only contain letters, numbers, spaces, "-" or "/" (max 20 characters).', 'danger')
+        return redirect(back)
+    publish = (request.form.get('publish_mode') or 'publish') != 'draft'
+
+    cur = mysql.connection.cursor()
+    rel_path = None
+    try:
+        cur.execute("SELECT id, course_code FROM courses WHERE id = %s FOR UPDATE", (course_id,))
+        course = cur.fetchone()
+        if not course:
+            mysql.connection.rollback()
+            flash('Academic program not found.', 'danger')
+            return redirect(back)
+
+        cur.execute("SELECT COALESCE(MAX(version), 0) + 1 AS v FROM course_documents WHERE course_id = %s", (course_id,))
+        version = int(cur.fetchone()['v'])
+        if not title:
+            title = f"{course['course_code']} Curriculum {academic_year or 'v%d' % version}"
+
+        rel_path = f"course_{course_id}/{uuid.uuid4().hex}.{ext}"
+        _write_prospectus_file(rel_path, data)
+
+        if publish:   # previous current document becomes an archived version
+            cur.execute("""UPDATE course_documents SET is_current = NULL, updated_at = NOW()
+                           WHERE course_id = %s AND is_current = 1""", (course_id,))
+        cur.execute("""INSERT INTO course_documents
+                         (course_id, document_title, original_filename, stored_filename, file_path, file_type,
+                          file_size, version, academic_year, is_current, is_published, uploaded_by)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (course_id, title, original_name, rel_path.split('/')[-1], rel_path, ext,
+                     len(data), version, academic_year or None, 1 if publish else None,
+                     1 if publish else 0, session['user_id']))
+        mysql.connection.commit()
+    except Exception:
+        mysql.connection.rollback()
+        if rel_path:
+            _remove_prospectus_file(rel_path)
+        app.logger.exception('prospectus upload failed')
+        flash('The prospectus could not be saved because of a server error. Nothing was changed.', 'danger')
+        return redirect(back)
+    finally:
+        cur.close()
+
+    if publish:
+        flash(f"Prospectus v{version} uploaded and published as the current curriculum for {course['course_code']}.", 'success')
+    else:
+        flash(f"Prospectus v{version} saved as a draft for {course['course_code']}. Publish it when it is ready.", 'success')
+    return redirect(back)
+
+
+@app.route('/admin/courses/documents/<int:doc_id>/publish', methods=['POST'])
+@admin_required
+def admin_publish_prospectus(doc_id):
+    """Make a (draft or archived) version the current, student-visible curriculum."""
+    doc = _get_document(doc_id)
+    if not doc:
+        flash('Document not found.', 'danger')
+        return redirect(url_for('admin_courses'))
+    cur = mysql.connection.cursor()
+    try:
+        cur.execute("SELECT id FROM courses WHERE id = %s FOR UPDATE", (doc['course_id'],))
+        cur.execute("""UPDATE course_documents SET is_current = NULL, updated_at = NOW()
+                       WHERE course_id = %s AND is_current = 1""", (doc['course_id'],))
+        cur.execute("""UPDATE course_documents SET is_current = 1, is_published = 1, updated_at = NOW()
+                       WHERE id = %s""", (doc_id,))
+        mysql.connection.commit()
+    except Exception:
+        mysql.connection.rollback()
+        app.logger.exception('prospectus publish failed')
+        flash('Could not publish the document. Nothing was changed.', 'danger')
+        return redirect(url_for('admin_courses'))
+    finally:
+        cur.close()
+    flash(f"Version {doc['version']} is now the current published prospectus for {doc['course_code']}.", 'success')
+    return redirect(url_for('admin_courses'))
+
+
+@app.route('/admin/courses/documents/<int:doc_id>/archive', methods=['POST'])
+@admin_required
+def admin_archive_prospectus(doc_id):
+    """Withdraw the current version from students but keep the file and its history."""
+    doc = _get_document(doc_id)
+    if not doc:
+        flash('Document not found.', 'danger')
+        return redirect(url_for('admin_courses'))
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE course_documents SET is_current = NULL, updated_at = NOW() WHERE id = %s", (doc_id,))
+    mysql.connection.commit()
+    cur.close()
+    flash(f"Version {doc['version']} archived. Students no longer see it.", 'info')
+    return redirect(url_for('admin_courses'))
+
+
+@app.route('/admin/courses/documents/<int:doc_id>/delete', methods=['POST'])
+@admin_required
+def admin_delete_prospectus(doc_id):
+    doc = _get_document(doc_id)
+    if not doc:
+        flash('Document not found.', 'danger')
+        return redirect(url_for('admin_courses'))
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM course_documents WHERE id = %s", (doc_id,))
+    mysql.connection.commit()
+    cur.close()
+    _remove_prospectus_file(doc['file_path'])
+    flash(f"Version {doc['version']} of the {doc['course_code']} prospectus was permanently deleted.", 'info')
+    return redirect(url_for('admin_courses'))
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

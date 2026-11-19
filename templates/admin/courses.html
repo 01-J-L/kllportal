@@ -22,6 +22,7 @@
           <th>TITLE</th>
           <th>DESCRIPTION</th>
           <th class="text-center">CREDITS</th>
+          <th>PROSPECTUS</th>
           <th class="text-center">STATUS</th>
           <th class="text-center">ACTION</th>
         </tr>
@@ -32,9 +33,20 @@
           <td class="fw-bold">{{ c.course_code }}</td>
           <td>{{ c.course_name }}</td>
           <td class="text-muted" style="max-width: 280px;">
-            {{ (c.description|striptags)[:60] }}{% if c.description|length > 60 %}...{% endif %}
+            {{ ((c.description or '')|striptags)[:60] }}{% if (c.description or '')|length > 60 %}...{% endif %}
           </td>
           <td class="text-center fw-bold">{{ c.credits }}</td>
+          <td>
+            {% set docs = documents.get(c.id, []) %}
+            {% set cur_doc = (docs | selectattr('is_current') | list | first) if docs else none %}
+            {% if cur_doc %}
+              <span class="badge bg-success" title="{{ cur_doc.document_title }}">v{{ cur_doc.version }} · {{ cur_doc.file_type|upper }}</span>
+            {% elif docs %}
+              <span class="badge bg-warning text-dark">No current version</span>
+            {% else %}
+              <span class="text-muted small fst-italic">None uploaded</span>
+            {% endif %}
+          </td>
           <td class="text-center">
             <span class="badge {{ 'bg-success' if c.is_active else 'bg-secondary' }}">
               {{ 'Active' if c.is_active else 'Inactive' }}
@@ -46,13 +58,19 @@
               SHOW
             </button>
 
+            <!-- PROSPECTUS BUTTON -->
+            <button type="button" class="btn-tbl-doc" data-bs-toggle="modal" data-bs-target="#prospectusModal{{ c.id }}">
+              PROSPECTUS
+            </button>
+
             <!-- EDIT BUTTON -->
             <button type="button" class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#editCourseModal{{ c.id }}">
               EDIT
             </button>
 
             <!-- DELETE BUTTON -->
-            <form action="{{ url_for('admin_delete_course', id=c.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete {{ c.course_code }} - {{ c.course_name }}?');">
+            <form action="{{ url_for('admin_delete_course', id=c.id) }}" method="POST" class="d-inline" data-confirm="Permanently delete {{ c.course_code }} - {{ c.course_name }}?">
+{{ csrf_input() }}
               <button class="btn-tbl-delete" type="submit">
                 DELETE
               </button>
@@ -71,6 +89,112 @@
 <!-- ========================================================= -->
 
 {% for c in courses %}
+
+<!-- ================= PROSPECTUS / CURRICULUM MODAL ================= -->
+{% set docs = documents.get(c.id, []) %}
+<div class="modal fade" id="prospectusModal{{ c.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header modal-header-view">
+        <h5 class="modal-title fw-bold"><i class="fa fa-file-pdf me-2"></i>Prospectus / Curriculum — {{ c.course_name }} [{{ c.course_code }}]</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+
+        <!-- Upload / replace -->
+        <form action="{{ url_for('admin_upload_prospectus', course_id=c.id) }}" method="POST" enctype="multipart/form-data" class="doc-upload-box mb-4">
+          {{ csrf_input() }}
+          <h6 class="fw-bold mb-3"><i class="fa fa-upload me-1"></i> {{ 'Upload a new version / replace the current document' if docs else 'Upload the official prospectus' }}</h6>
+          <div class="row g-3">
+            <div class="col-md-5">
+              <label class="form-label small fw-bold text-secondary">DOCUMENT TITLE (OPTIONAL)</label>
+              <input type="text" name="document_title" class="form-control" maxlength="255" placeholder="e.g. {{ c.course_code }} Curriculum 2026">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-bold text-secondary">ACADEMIC YEAR</label>
+              <input type="text" name="academic_year" class="form-control" maxlength="20" placeholder="e.g. 2026-2027">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-secondary">AFTER UPLOAD</label>
+              <select name="publish_mode" class="form-select">
+                <option value="publish" selected>Publish as current (archive the old one)</option>
+                <option value="draft">Save as draft only</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold text-secondary">FILE (PDF RECOMMENDED · DOCX / DOC ALSO ACCEPTED · MAX 10 MB)</label>
+              <input type="file" name="prospectus_file" class="form-control" accept=".pdf,.docx,.doc,application/pdf" required>
+            </div>
+          </div>
+          <div class="mt-3 text-end">
+            <button type="submit" class="btn btn-admin-green m-0"><i class="fa fa-cloud-upload-alt me-1"></i> Upload Prospectus</button>
+          </div>
+        </form>
+
+        <!-- Version history -->
+        <h6 class="fw-bold mb-2">Versions</h6>
+        <div class="table-responsive">
+          <table class="admin-data-table doc-version-table">
+            <thead>
+              <tr>
+                <th>VER.</th><th>TITLE / FILE</th><th>YEAR</th><th>SIZE</th><th>UPLOADED</th>
+                <th class="text-center">STATUS</th><th class="text-center">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in docs %}
+              <tr>
+                <td class="fw-bold">v{{ d.version }}</td>
+                <td>
+                  <div class="fw-semibold">{{ d.document_title }}</div>
+                  <div class="small text-muted">{{ d.original_filename }} · {{ d.file_type|upper }}</div>
+                </td>
+                <td>{{ d.academic_year or '-' }}</td>
+                <td>{{ d.file_size|filesize }}</td>
+                <td>
+                  {{ d.created_at|fmt_date }}
+                  <div class="small text-muted">by {{ d.uploader_name or 'removed user' }}</div>
+                </td>
+                <td class="text-center">
+                  {% if d.is_current %}<span class="badge bg-success">Current · Published</span>
+                  {% elif d.is_published %}<span class="badge bg-secondary">Archived</span>
+                  {% else %}<span class="badge bg-warning text-dark">Draft</span>{% endif %}
+                </td>
+                <td class="text-center" style="white-space: nowrap;">
+                  {% if d.file_type == 'pdf' %}
+                  <a class="btn-tbl-show" href="{{ url_for('admin_view_prospectus', doc_id=d.id) }}" target="_blank" rel="noopener">VIEW</a>
+                  {% endif %}
+                  <a class="btn-tbl-show" href="{{ url_for('admin_download_prospectus', doc_id=d.id) }}">DOWNLOAD</a>
+                  {% if d.is_current %}
+                  <form action="{{ url_for('admin_archive_prospectus', doc_id=d.id) }}" method="POST" class="d-inline"
+                        data-confirm="Archive this version? Students will no longer see a prospectus until another version is published.">
+                    {{ csrf_input() }}<button type="submit" class="btn-tbl-edit">ARCHIVE</button>
+                  </form>
+                  {% else %}
+                  <form action="{{ url_for('admin_publish_prospectus', doc_id=d.id) }}" method="POST" class="d-inline"
+                        data-confirm="Make v{{ d.version }} the current official prospectus? The present current version will be archived.">
+                    {{ csrf_input() }}<button type="submit" class="btn-tbl-edit">SET CURRENT</button>
+                  </form>
+                  {% endif %}
+                  <form action="{{ url_for('admin_delete_prospectus', doc_id=d.id) }}" method="POST" class="d-inline"
+                        data-confirm="Permanently delete v{{ d.version }} ({{ d.original_filename }})? This cannot be undone.{% if d.is_current %} It is the CURRENT version, so students will see no prospectus until you publish another one.{% endif %}">
+                    {{ csrf_input() }}<button type="submit" class="btn-tbl-delete">DELETE</button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="7" class="text-center text-muted py-3">No prospectus has been uploaded for this program yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ================= SHOW COURSE MODAL ================= -->
 <div class="modal fade" id="showCourseModal{{ c.id }}" tabindex="-1" aria-hidden="true">
@@ -138,6 +262,7 @@
 <div class="modal fade" id="editCourseModal{{ c.id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <form class="modal-content" action="{{ url_for('admin_edit_course', id=c.id) }}" method="POST">
+{{ csrf_input() }}
       <div class="modal-header modal-header-edit">
         <h5 class="modal-title fw-bold"><i class="fa fa-pen me-2"></i>Edit Course: {{ c.course_code }}</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -213,6 +338,7 @@
 <div class="modal fade" id="createCourseModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
     <form class="modal-content" action="{{ url_for('admin_create_course') }}" method="POST">
+{{ csrf_input() }}
       <div class="modal-header modal-header-create">
         <h5 class="modal-title fw-bold"><i class="fa fa-plus-circle me-2"></i>Create Academic Program</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>

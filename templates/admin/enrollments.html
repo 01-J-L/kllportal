@@ -1,0 +1,208 @@
+{% extends 'admin_layout.html' %}
+{% block content %}
+
+<div class="admin-panel-card">
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h2 class="admin-panel-title mb-0">Student Enrollment Management</h2>
+    <a href="{{ url_for('admin_users') }}" class="btn-admin-outline"><i class="fa fa-user-edit me-1"></i> ASSIGN VIA USER MANAGEMENT</a>
+  </div>
+
+  <!-- ===== SUMMARY CARDS (live database counts) ===== -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+      <div class="enroll-stat-card">
+        <span class="enroll-stat-icon" style="background:#e0ecff;color:#1e60d5;"><i class="fa fa-users"></i></span>
+        <div><div class="enroll-stat-value">{{ total_students }}</div><div class="enroll-stat-label">Total Registered Students</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="enroll-stat-card">
+        <span class="enroll-stat-icon" style="background:#d1fae5;color:#059669;"><i class="fa fa-user-graduate"></i></span>
+        <div><div class="enroll-stat-value">{{ total_enrolled }}</div><div class="enroll-stat-label">Total Enrolled Students</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="enroll-stat-card">
+        <span class="enroll-stat-icon" style="background:#fef3c7;color:#b45309;"><i class="fa fa-user-clock"></i></span>
+        <div><div class="enroll-stat-value">{{ without_program }}</div><div class="enroll-stat-label">Students Without Assigned Programs</div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="enroll-stat-card">
+        <span class="enroll-stat-icon" style="background:#fce7f3;color:#be185d;"><i class="fa fa-book"></i></span>
+        <div><div class="enroll-stat-value">{{ active_programs }}</div><div class="enroll-stat-label">Total Active Academic Programs</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STUDENTS PER PROGRAM ===== -->
+  {% if per_program %}
+  <div class="program-chip-row mb-4">
+    {% for p in per_program %}
+    <a class="program-chip {{ 'is-selected' if filters.program == p.id }} {{ 'is-inactive' if not p.is_active }}"
+       href="{{ url_for('admin_enrollments', program=p.id) }}" title="{{ p.course_name }}">
+      <strong>{{ p.course_code }}</strong> — {{ p.student_count }} Student{{ '' if p.student_count == 1 else 's' }}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ===== FILTERS ===== -->
+  <form method="GET" action="{{ url_for('admin_enrollments') }}" class="enroll-filter-bar mb-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label small fw-bold text-secondary">PROGRAM</label>
+        <select name="program" class="form-select" data-searchable data-search-min="6">
+          <option value="">All Programs</option>
+          {% for p in per_program %}
+          <option value="{{ p.id }}" {% if filters.program == p.id %}selected{% endif %}>{{ p.course_name }} ({{ p.course_code }}){% if not p.is_active %} — inactive{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-bold text-secondary">SEARCH NAME / EMAIL</label>
+        <input type="search" name="q" class="form-control" value="{{ filters.q }}" placeholder="e.g. Juan or juan@mail.com" maxlength="100">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-bold text-secondary">STATUS</label>
+        <select name="status" class="form-select">
+          <option value="All" {% if filters.status == 'All' %}selected{% endif %}>All records</option>
+          {% for st in statuses %}
+          <option value="{{ st }}" {% if filters.status == st %}selected{% endif %}>{{ st }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-bold text-secondary">SORT BY</label>
+        <select name="sort" class="form-select">
+          <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Date: newest first</option>
+          <option value="oldest" {% if filters.sort == 'oldest' %}selected{% endif %}>Date: oldest first</option>
+          <option value="name" {% if filters.sort == 'name' %}selected{% endif %}>Name: A–Z</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn-admin-green flex-grow-1">FILTER</button>
+        <a href="{{ url_for('admin_enrollments') }}" class="btn-admin-outline" title="Reset filters"><i class="fa fa-undo"></i></a>
+      </div>
+    </div>
+  </form>
+
+  <p class="text-muted small mb-2" id="enrollmentTotal">
+    Showing <strong>{{ rows|length }}</strong> of <strong>{{ total }}</strong> record{{ '' if total == 1 else 's' }}
+    {% if filters.status != 'All' %}with status <strong>{{ filters.status }}</strong>{% endif %}.
+  </p>
+
+  <!-- ===== TABLE ===== -->
+  <div class="table-responsive">
+    <table class="admin-data-table">
+      <thead>
+        <tr>
+          <th>ACCOUNT ID</th>
+          <th>STUDENT NAME</th>
+          <th>EMAIL</th>
+          <th>PHONE</th>
+          <th>ACADEMIC PROGRAM</th>
+          <th>COURSE CODE</th>
+          <th>ENROLLMENT DATE</th>
+          <th class="text-center">STATUS</th>
+          <th class="text-center">ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.student_id }}</td>
+          <td class="fw-bold">{{ r.name }}</td>
+          <td>{{ r.email }}</td>
+          <td>{{ r.phone_number or '-' }}</td>
+          <td>{{ r.course_name }}</td>
+          <td><span class="program-pill">{{ r.course_code }}</span></td>
+          <td>{{ r.enrolled_at|fmt_date }}</td>
+          <td class="text-center">
+            <span class="badge {{ 'bg-success' if r.enrollment_status == 'Enrolled' else ('bg-secondary' if r.enrollment_status == 'Transferred' else 'bg-warning text-dark') }}">{{ r.enrollment_status }}</span>
+          </td>
+          <td class="text-center" style="white-space: nowrap;">
+            {% if r.is_current == 1 %}
+            <button type="button" class="btn-tbl-edit" data-bs-toggle="modal" data-bs-target="#changeProgramModal"
+                    data-student-name="{{ r.name }}" data-current-program="{{ r.course_id }}"
+                    data-action="{{ url_for('admin_set_student_program', student_id=r.student_id) }}">CHANGE</button>
+            <form action="{{ url_for('admin_remove_student_program', student_id=r.student_id) }}" method="POST" class="d-inline"
+                  data-confirm="Remove {{ r.name }} from {{ r.course_code }}? The record is kept in the enrollment history.">
+              {{ csrf_input() }}
+              <button type="submit" class="btn-tbl-delete">REMOVE</button>
+            </form>
+            {% else %}
+            <span class="text-muted small">history</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="text-center text-muted py-4">No enrollment records match these filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== PAGINATION ===== -->
+  {% if total_pages > 1 %}
+  <nav aria-label="Enrollment pages" class="mt-3">
+    <ul class="pagination pagination-sm justify-content-center flex-wrap mb-0">
+      <li class="page-item {{ 'disabled' if page <= 1 }}"><a class="page-link" href="{{ url_for('admin_enrollments', page=page-1, **qs) }}">&laquo; Prev</a></li>
+      {% for n in range(1, total_pages + 1) %}
+        {% if n == 1 or n == total_pages or (n - page)|abs <= 2 %}
+        <li class="page-item {{ 'active' if n == page }}"><a class="page-link" href="{{ url_for('admin_enrollments', page=n, **qs) }}">{{ n }}</a></li>
+        {% elif (n - page)|abs == 3 %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item {{ 'disabled' if page >= total_pages }}"><a class="page-link" href="{{ url_for('admin_enrollments', page=page+1, **qs) }}">Next &raquo;</a></li>
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+
+<!-- ================= CHANGE PROGRAM MODAL (shared by every row) ================= -->
+<div class="modal fade" id="changeProgramModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="POST" action="#" id="changeProgramForm">
+      {{ csrf_input() }}
+      <div class="modal-header modal-header-edit">
+        <h5 class="modal-title fw-bold"><i class="fa fa-exchange-alt me-2"></i>Change Academic Program</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+        <p class="mb-3">Student: <strong id="changeProgramStudent"></strong></p>
+        <label class="form-label small fw-bold text-secondary">SELECT ACADEMIC PROGRAM</label>
+        <select name="course_id" id="changeProgramSelect" class="form-select" data-searchable data-search-min="6" required>
+          {% for p in programs %}
+          <option value="{{ p.id }}">{{ p.course_name }} ({{ p.course_code }})</option>
+          {% endfor %}
+        </select>
+        <div class="form-text">Only active programs are listed. The previous enrollment is kept as history.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-modal-save">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var modal = document.getElementById('changeProgramModal');
+  if (!modal) return;
+  modal.addEventListener('show.bs.modal', function (ev) {
+    var btn = ev.relatedTarget;
+    if (!btn) return;
+    document.getElementById('changeProgramForm').action = btn.getAttribute('data-action');
+    document.getElementById('changeProgramStudent').textContent = btn.getAttribute('data-student-name');
+    var sel = document.getElementById('changeProgramSelect');
+    if (window.setSearchableValue) { window.setSearchableValue(sel, btn.getAttribute('data-current-program')); }
+    else { sel.value = btn.getAttribute('data-current-program'); }
+  });
+});
+</script>
+
+{% endblock %}

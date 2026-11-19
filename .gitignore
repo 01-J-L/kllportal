@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+.env
+protected_uploads/
+.pytest_cache/

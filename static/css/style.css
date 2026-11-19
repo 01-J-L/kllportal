@@ -3428,3 +3428,70 @@ body.portal-body {
   0% { transform: translateX(100vw); }
   100% { transform: translateX(-100%); }
 }
+
+/* ======================================================================
+   Student enrollment + prospectus management (added)
+   ====================================================================== */
+.btn-admin-outline {
+  display: inline-block; padding: 9px 18px; border: 2px solid #10b981; color: #059669;
+  background: transparent; border-radius: 6px; font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.5px; text-decoration: none; cursor: pointer; transition: all .2s ease;
+}
+.btn-admin-outline:hover { background: #10b981; color: #fff; }
+
+.btn-tbl-doc {
+  background-color: #7c3aed; color: #fff; border: none; border-radius: 4px;
+  padding: 5px 12px; font-size: 0.72rem; font-weight: 700; margin-right: 4px; cursor: pointer;
+}
+.btn-tbl-doc:hover { background-color: #6d28d9; }
+a.btn-tbl-show, a.btn-tbl-edit { text-decoration: none; display: inline-block; }
+
+.program-pill {
+  display: inline-block; padding: 2px 10px; border-radius: 999px; background: #e0ecff;
+  color: #1e60d5; font-size: 0.75rem; font-weight: 700; letter-spacing: .3px;
+}
+
+.admin-table-search { position: relative; min-width: 260px; }
+.admin-table-search i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+.admin-table-search .form-control { padding-left: 34px; }
+
+.searchable-select-input { margin-bottom: 6px; }
+
+/* summary cards */
+.enroll-stat-card {
+  display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 10px; padding: 16px; height: 100%; box-shadow: 0 1px 3px rgba(15,23,42,.06);
+}
+.enroll-stat-icon {
+  flex: 0 0 46px; height: 46px; border-radius: 12px; display: flex; align-items: center;
+  justify-content: center; font-size: 1.2rem;
+}
+.enroll-stat-value { font-size: 1.6rem; font-weight: 800; line-height: 1.1; color: #0f172a; }
+.enroll-stat-label { font-size: 0.74rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .3px; }
+
+.program-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.program-chip {
+  padding: 6px 14px; border-radius: 999px; background: #f1f5f9; color: #334155;
+  font-size: 0.82rem; text-decoration: none; border: 1px solid #e2e8f0; transition: all .15s ease;
+}
+.program-chip:hover, .program-chip.is-selected { background: #1e60d5; border-color: #1e60d5; color: #fff; }
+.program-chip.is-inactive { opacity: .6; }
+
+.enroll-filter-bar { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+
+/* prospectus modal */
+.doc-upload-box { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 18px; }
+.doc-version-table td, .doc-version-table th { vertical-align: middle; }
+
+/* student academic cards */
+.academic-field {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; height: 100%;
+}
+.academic-field span { display: block; font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .4px; }
+.academic-field strong { font-size: 0.95rem; color: #0f172a; word-break: break-word; }
+
+@media (max-width: 767.98px) {
+  .admin-table-search { min-width: 100%; }
+  .enroll-stat-value { font-size: 1.3rem; }
+  .doc-version-table .btn-tbl-show, .doc-version-table .btn-tbl-edit, .doc-version-table .btn-tbl-delete { margin-bottom: 4px; }
+}
